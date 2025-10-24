@@ -1,7 +1,7 @@
 import json
 import os
 
-TEST_MODE = True
+MODE = True
 
 
 ### Housekeeping
@@ -35,8 +35,8 @@ MONGO_URI = os.environ['MONGO_URI']
 BOT_TOKEN = os.environ['BOT_TOKEN']
 
 ### setup_json
-SPAM_CHANNEL_ID = setup_json["test_thread_id"]
-SERVER_ID = setup_json["test_server_id"]
+SPAM_CHANNEL_ID = setup_json["thread_id"]
+SERVER_ID = setup_json["server_id"]
 WAITER_ROLE_IDS = setup_json["waiter_role_ids"]
 ADMIN_MOD_ROLE_IDS = setup_json["admin_mod_role_ids"]
 CHEF_ROLE_ID = setup_json["chef_role_id"]
@@ -49,9 +49,9 @@ IMAGE_KEYS.extend(setup_json[RR])
 
 ROBERTO_ID = 1332595381095366656
 
-PUBLIC_CHANNEL_IDS = setup_json["test_public_channel_ids"]
-PRIVATE_CHANNEL_IDS = setup_json["test_private_channel_ids"]
-STAFF_CHANNEL_IDS = setup_json["test_staff_channel_ids"]
+PUBLIC_CHANNEL_IDS = setup_json["public_channel_ids"]
+PRIVATE_CHANNEL_IDS = setup_json["private_channel_ids"]
+STAFF_CHANNEL_IDS = setup_json["staff_channel_ids"]
 SPREADSHEET_IDS = setup_json["spreadsheet_ids"]
 CHANNEL_IDS_DICT = {pub_id : PRIVATE_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
 STAFF_CHANNEL_IDS_DICT = {pub_id : STAFF_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
