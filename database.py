@@ -3,14 +3,15 @@ import os
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
+from constants import MONGO_URI
+
 DEFAULT_HEXES = ["Graveborn-Hex", "Generic-Outline", "Lightbearer-Hex", "Artifact-S3-Outline"]
 DEFAULT_MAP = "Arena I"
 DEFAULT_NAME = "Untitled"
 
 class Database:
     def __init__(self):
-        mongo_uri = os.environ['MONGO_URI']
-        self.client = MongoClient(mongo_uri, server_api=ServerApi('1'))
+        self.client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
         self.db = self.client['discord_bot_roberto']
         self.users_db = self.db['users']
         self.counters_db = self.db['counters']

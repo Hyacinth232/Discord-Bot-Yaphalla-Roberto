@@ -35,7 +35,7 @@ BOUNDARIES = [{
 
 
 CIRC_FOLDER = 'Cropped_Circles'
-RECT_FOLDER = 'Cropped_Rectangles'
+# RECT_FOLDER = 'Cropped_Rectangles'
 CIRCLE_TEMPLATE_SIZE = (96, 96)
 RECT_TEMPLATE_SIZE = (110, 118)
 
@@ -59,7 +59,7 @@ class Analyze_Image:
                 # Store in dict
                 template = cv2.resize(input_img, CIRCLE_TEMPLATE_SIZE, interpolation=cv2.INTER_AREA)
                 self.circ_templates[name] = template
-
+        """
         self.rect_templates = {}
         for filename in os.listdir(RECT_FOLDER):
             # For all images
@@ -76,6 +76,7 @@ class Analyze_Image:
                 template = self.pad_to_aspect(input_img, RECT_TEMPLATE_SIZE[0] / RECT_TEMPLATE_SIZE[1])
                 template = cv2.resize(template, RECT_TEMPLATE_SIZE, interpolation=cv2.INTER_AREA)
                 self.rect_templates[name] = template
+        """
                 
     def clear(self):
         self.image = None
@@ -176,7 +177,7 @@ class Analyze_Image:
             image_byte_stream.seek(0)
         """
             
-        unit_name = self.categorize_rectangle()
+        # unit_name = self.categorize_rectangle()
         #self.artifact = self.add_unit(unit_name, -1, self.rectangle)
             
         for i in range(len(self.circles_pos) - 1, -1, -1):
@@ -263,6 +264,7 @@ class Analyze_Image:
             cropped_circle = cropped_circle[:size, :size]
             self.circles.append(cropped_circle)
             
+    """
     def categorize_rectangle(self):
         rectangle = self.rectangle
         if rectangle.shape[2] == 4:
@@ -285,7 +287,8 @@ class Analyze_Image:
                 best_label = label.split('_', 1)[0]
 
         return best_label
-
+    """
+    
     def categorize_circle(self, index):
         a, b, r = self.circles_pos[index]
         x1, y1 = max(a - r, 0), max(b - r, 0)

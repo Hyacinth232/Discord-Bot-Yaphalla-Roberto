@@ -4,16 +4,14 @@ import os
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
-from constants import SPREADSHEET_IDS
+from constants import GSHEETS_INFO, SPREADSHEET_IDS
 from utils import sanitize_user_input
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-def _get_creds_from_env():
-    info = json.loads(os.environ["GOOGLE_SA_JSON"])
-    return Credentials.from_service_account_info(info, scopes=SCOPES)
-
-agcm = AsyncioGspreadClientManager(_get_creds_from_env)
+agcm = AsyncioGspreadClientManager(
+    Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
+    )
 
 async def add_row(
     num_id: int,
