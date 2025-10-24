@@ -1,0 +1,45 @@
+### Guides
+`/paragon`: Show Yaphalla's Paragon Graphic
+
+`/dream-realm`: Show Yaphalla's Dream Realm infographics and channels
+`/dr`
+
+`/primal-lord` Show Yaphalla's Primal Lord infographics and channels
+`/pl`
+
+### Formation builder
+`/aliases`: List all aliases for unit names.
+`/emoji`: See emoji with a given name.
+
+`/view`: View current formation.
+`/display`: Display current formation
+
+`/clear_formation`: Clear current formation without saving.
+
+`/add_list`: Add units. Reads pairs consisting of a unit name followed by a tile number. If the final name does not have a tile number, it is considered as the artifact. Artifact tile number is 'a', 'A1', '-1', etc.
+```
+/add name number name number ...
+/add pairs:sonja 3 valka 4 girl 2 blue 7 frost
+/add pairs:starshard, a, talene, 13
+/add pairs:confining a2, vala 3, enlightening -1, scarlita 4
+```
+`/remove_list`: Remove units. Reads a list of names and/or tile numbers.
+```
+/remove name_or_number name_or_number ...
+/remove names_or_indices:4 5
+/remove names_or_indices:talene,12,starshard,5,-2
+```
+`swap_list`: Swaps units. Reads pairs of names and/or tile numbers and swaps each pair.
+```
+/swap name_or_number1 name_or_number2 name_or_number1 name_or_number2 ...
+/swap pairs:parisa 7 6 7 -2 frostfall
+/swap pairs:parisa,7 12,sonja frost,starshard
+```
+
+```
+/set_arena
+/set_title
+/show_title
+/show_numbers
+/make_transparent
+```

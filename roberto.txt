@@ -1,0 +1,8 @@
+## Roberto's `!submit` command
+To help us track formations, the`!submit` command forwards messages to the 📌 channels.
+- **Anyone** can use it. Simply reply to the message you would like to submit, type !submit, and hit enter.
+- Please use the `!submit` command for new formations, noteworthy benchmarks, team damage comparisons, etc.
+- **Please remember to include author credits, damage spread, and investment screenshots in your message *before* submitting.** If our submissions are missing information, you will simply end up waiting longer for a graphic because our team will have to scrub through the chat until we track down who made the team/which team you used, etc.
+- <@&1333544340437340277> will react with 📝 for any message that has been submitted but don't be afraid of accidentally submitting twice.
+### Example Submission
+credit: Asparagus
