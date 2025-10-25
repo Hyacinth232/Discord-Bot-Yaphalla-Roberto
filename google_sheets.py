@@ -9,9 +9,10 @@ from utils import sanitize_user_input
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
-agcm = AsyncioGspreadClientManager(
-    Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
-    )
+def _get_creds_from_env():
+    return Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
+
+agcm = AsyncioGspreadClientManager(_get_creds_from_env)
 
 async def add_row(
     num_id: int,
