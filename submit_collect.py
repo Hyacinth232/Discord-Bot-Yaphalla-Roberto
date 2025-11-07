@@ -166,11 +166,12 @@ class Submit_Collect:
         text += "**From:** {}\n".format(self.author_name)
         #text += "Forwarder: {}, ".format(self.forwarder.mention)
         #if self.is_forwarded: text += "**FORWARDED**\n"
-            
+        
         if self.form:
             text += "**Credits:** {}\n".format(self.credit_name)
             text += "**Damage:** {}\n".format(self.damage)
             text += "**Ascension:** {}\n".format(self.ascension)
+            text += "**Resonance** {}\n".format(self.resonance)
         
         text += "\n"
         
