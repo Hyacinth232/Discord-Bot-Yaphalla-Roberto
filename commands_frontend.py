@@ -506,7 +506,7 @@ class Commands_Frontend:
         if not ctx.guild or ctx.guild.id != SERVER_ID: return
         
         if not ctx.message.reference:
-            my_files = [
+            """my_files = [
                 discord.File("Sample_Formation.png"),
                 discord.File("Sample_Team.png"),
                 discord.File("Sample_Damage.png")
@@ -514,6 +514,7 @@ class Commands_Frontend:
             #await ctx.send("Please reply to the message you want to submit with `!submit`.")
             
             await ctx.send(content=ROBERTO_TEXT, files=my_files)
+            """
             return
         
         replied_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
