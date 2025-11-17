@@ -181,7 +181,8 @@
             "Valka",
             "Viperian",
             "Shemira",
-            "Daimon"
+            "Daimon",
+            "Shadewing"
         ],
         "Celestial": [
             "Aliceth",
@@ -204,12 +205,19 @@
             "Reinier",
             "Cryonaia",
             "Kulu",
-            "Saida"
+            "Saida",
+            "Mehira",
         ],
         "Dimensional": [
             "Natsu",
             "Lucy",
-            "Pandora"
+            "Pandora",
+            "Laios",
+            "Marcille"
+        ],
+        "Phantimal": [
+            "Illucia",
+            "Grim-Executioner"
         ],
         "Wildcard": [
             "Lightbearer",
