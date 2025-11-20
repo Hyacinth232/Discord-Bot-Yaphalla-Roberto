@@ -534,6 +534,24 @@ class Commands_Frontend:
         await submitter.forward_formation(ChannelType.PRIVATE)
         await submitter.forward_formation(ChannelType.STAFF, formations)
         
+    async def add_permissions(self, bot: discord.Client):
+        
+        guild = bot.get_guild(SERVER_ID)
+        for game_mode in ['dream_realm', 'primal_lords']:
+            for boss_name in setup_json[game_mode]:
+                try:
+                    private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
+                    overwrite = discord.PermissionOverwrite()
+                    waiter = guild.get_role(1366553846234746971)
+                    editor = guild.get_role(1366553665816625253)
+                    overwrite.send_messages=True
+                        
+                    await private_channel.set_permissions(waiter, overwrite=overwrite)
+                    await private_channel.set_permissions(editor, overwrite=overwrite)
+                    
+                except Exception as e:
+                    pass
+        
     async def rotate_channels(self, bot: discord.Client):
         game_mode = 'dream_realm'
         

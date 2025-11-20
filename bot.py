@@ -35,6 +35,7 @@ async def on_ready():
     if owner: await owner.send(", ".join([guild.name for guild in bot.guilds]))
     
     rotate_channels.start()
+    await commands_frontend.add_permissions(bot)
 
 ### AUTOCOMPLETES ###
 async def all_name_autocomplete(interaction: discord.Interaction, current: str):
