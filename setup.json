@@ -31,9 +31,15 @@
         "Magmazard": "1ZCj0ygkDoyDSxVyyy-YKtnJZkzdn-H2wa81LV8qNPk0",
         "Blightshroom": "1FkU4MNhYRjhg7dkOmUvrROIgWY3tyJeu-tzmQYoNqY8",
         "Gloommaw": "1V440avyPWU8cbqsdEnJqphrBwLvgfo6SRGO8dyBPh4E",
-        "Doomscourge": "1PUfT4Jo0zSHa5n94S9-UH7eVNLyhVrmACZuW5T3FeNE"
+        "Doomscourge": "1PUfT4Jo0zSHa5n94S9-UH7eVNLyhVrmACZuW5T3FeNE",
+        "Charge": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Clash": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Conquer": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14"
     },
     "private_channel_ids": {
+        "Charge": 1442406565280878653,
+        "Clash": 1442406593625849929,
+        "Conquer": 1442406616564760627,
         "King Croaker": 1418009669242192044,
         "Necrodrakon": 1418009825551319181,
         "Thalassa": 1418009909945045022,
@@ -64,6 +70,9 @@
         "Aurora (Lightbearers)": 1407116937628090379
     },
     "staff_channel_ids": {
+        "Charge": 1442541833451475138,
+        "Clash": 1442541876367593505,
+        "Conquer": 1442541930075525180,
         "King Croaker": 1418309794367934464,
         "Necrodrakon": 1418309825778942093,
         "Thalassa": 1418309921488900096,
@@ -94,6 +103,9 @@
         "Aurora (Lightbearers)": 1413316450638233640
     },
     "public_channel_ids": {
+        "Charge": 1442406458703741009,
+        "Clash": 1442406492048461834,
+        "Conquer": 1442406522695975044,
         "King Croaker": 1418009717414039665,
         "Necrodrakon": 1418009860787933336,
         "Thalassa": 1418009959542816861,
@@ -143,5 +155,10 @@
         "Cinderwings",
         "Gloommaw",
         "Doomscourge"
+    ],
+    "titan_reaver": [
+        "Charge",
+        "Clash",
+        "Conquer"
     ]
 }
