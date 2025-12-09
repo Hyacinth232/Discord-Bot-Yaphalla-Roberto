@@ -231,7 +231,7 @@ class Analyze_Image:
             count = 0
             
             for pt in circles[0, :]:
-                if count >= 8: # limit to 8 units
+                if count >= 10: # limit to 8 units
                     break
                 a, b, r = pt[0], pt[1], pt[2]
                 self.circles_pos.append([a, b, r])

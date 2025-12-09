@@ -34,9 +34,11 @@
         "Doomscourge": "1PUfT4Jo0zSHa5n94S9-UH7eVNLyhVrmACZuW5T3FeNE",
         "Charge": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
         "Clash": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "Conquer": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14"
+        "Conquer": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Age of Calamity": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14"
     },
     "private_channel_ids": {
+        "Age of Calamity": 1447376245158445128,
         "Charge": 1442406565280878653,
         "Clash": 1442406593625849929,
         "Conquer": 1442406616564760627,
@@ -70,6 +72,7 @@
         "Aurora (Lightbearers)": 1407116937628090379
     },
     "staff_channel_ids": {
+        "Age of Calamity": 1447806861507035239,
         "Charge": 1442541833451475138,
         "Clash": 1442541876367593505,
         "Conquer": 1442541930075525180,
@@ -103,6 +106,7 @@
         "Aurora (Lightbearers)": 1413316450638233640
     },
     "public_channel_ids": {
+        "Age of Calamity": 1447376215731339394,
         "Charge": 1442406458703741009,
         "Clash": 1442406492048461834,
         "Conquer": 1442406522695975044,
@@ -159,6 +163,7 @@
     "titan_reaver": [
         "Charge",
         "Clash",
-        "Conquer"
+        "Conquer",
+        "Age of Calamity"
     ]
 }

@@ -86,7 +86,7 @@ class SpreadsheetModal(discord.ui.Modal):
             style=discord.TextStyle.paragraph,
             required=False,
             min_length=1,
-            max_length=100
+            max_length=1000
         )
         
         self.bot = bot
