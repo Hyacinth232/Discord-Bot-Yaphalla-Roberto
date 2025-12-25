@@ -6,7 +6,8 @@ from discord.ext import commands
 
 from commands_backend import Commands_Backend
 from constants import (AMARYLLIS_ID, CHANNEL_IDS_DICT, PRIVATE_CHANNEL_IDS,
-                       PUBLIC_CHANNEL_IDS, ROBERTO_TEXT, SERVER_ID, setup_json)
+                       PUBLIC_CHANNEL_IDS, ROBERTO_TEXT, SERVER_ID,
+                       shared_config)
 from enum_classes import TRANSLATE, ChannelType, Language
 from modals import BasicModal, SpreadsheetModal
 from submit_collect import Submit_Collect
@@ -370,7 +371,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang, True)
             
     async def dropdown_wrapper(self, interaction: discord.Interaction, game_mode: str):
-        text = '\n'.join(["<#{}>".format(PUBLIC_CHANNEL_IDS[boss_name]) for boss_name in setup_json[game_mode]])
+        text = '\n'.join(["<#{}>".format(PUBLIC_CHANNEL_IDS[boss_name]) for boss_name in shared_config[game_mode]])
         text += '\n\nView Boss Infographs by selecting a Boss below.'
         title = game_mode.replace('_', ' ').title()
                 
@@ -380,7 +381,7 @@ class Commands_Frontend:
             color=discord.Color.fuchsia(),
         )
         
-        view = DropdownView(setup_json[game_mode], 'Select a Boss...', self.get_image_embed)
+        view = DropdownView(shared_config[game_mode], 'Select a Boss...', self.get_image_embed)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
         view.message = await interaction.original_response()
     
@@ -538,7 +539,7 @@ class Commands_Frontend:
         
         guild = bot.get_guild(SERVER_ID)
         for game_mode in ['dream_realm', 'primal_lords']:
-            for boss_name in setup_json[game_mode]:
+            for boss_name in shared_config[game_mode]:
                 try:
                     private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
                     overwrite = discord.PermissionOverwrite()
@@ -563,11 +564,11 @@ class Commands_Frontend:
 
         elapsed_days = (datetime.now(timezone.utc) - START_DATE).days
         
-        count = len(setup_json[game_mode])
-        today_boss = setup_json[game_mode][elapsed_days % count]
-        tomorrow_boss = setup_json[game_mode][(elapsed_days + 1) % count]
+        count = len(shared_config[game_mode])
+        today_boss = shared_config[game_mode][elapsed_days % count]
+        tomorrow_boss = shared_config[game_mode][(elapsed_days + 1) % count]
         
-        """for boss_name in setup_json[game_mode]:
+        """for boss_name in shared_config[game_mode]:
             private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
             try:
                 overwrite = discord.PermissionOverwrite()
@@ -578,7 +579,7 @@ class Commands_Frontend:
                 await owner.send("Failed to hide {}: {}".format(boss_name, e))
         """
 
-        for boss_name in setup_json[game_mode]:
+        for boss_name in shared_config[game_mode]:
             private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
             public_channel = guild.get_channel(PUBLIC_CHANNEL_IDS[boss_name])
             

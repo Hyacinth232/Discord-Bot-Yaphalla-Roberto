@@ -30,3 +30,4 @@ rsa==4.9.1
 StrEnum==0.4.15
 urllib3==2.5.0
 yarl==1.18.3
+python-dotenv==1.0.0

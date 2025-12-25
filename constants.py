@@ -1,6 +1,10 @@
 import json
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 MODE = True
 
 
@@ -17,7 +21,11 @@ with open( "usage.txt", "r") as f:
 with open("roberto.txt", "r") as f:
     ROBERTO_TEXT = f.read()
 
-setup_json = read_json("setup.json")
+# Load configuration files
+shared_config = read_json("setup_shared.json")
+setup_production = read_json("setup_production.json")
+setup_test = read_json("setup_test.json")
+
 aliases_json = read_json("aliases.json")
 EMOJIS = read_json("emojis.json")
 MAPS = read_json("maps.json")
@@ -28,31 +36,47 @@ DR = 'dream_realm'
 PL = 'primal_lords'
 RR = 'ravaged_realm'
 
-RR_BOSSES = setup_json[RR]
+RR_BOSSES = shared_config[RR]
 
-GSHEETS_INFO = json.loads(os.environ["GOOGLE_SA_JSON"])
-MONGO_URI = os.environ['MONGO_URI']
-BOT_TOKEN = os.environ['BOT_TOKEN']
+if os.environ.get("GOOGLE_SA_JSON"):
+    GSHEETS_INFO = json.loads(os.environ["GOOGLE_SA_JSON"])
+else:
+    raise FileNotFoundError("GOOGLE_SA_JSON environment variable is required")
+
+MONGO_URI = os.environ.get('MONGO_URI')
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable is required")
+
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+if not BOT_TOKEN:
+    raise ValueError("BOT_TOKEN environment variable is required")
 
 ### setup_json
-SPAM_CHANNEL_ID = setup_json["thread_id"]
-SERVER_ID = setup_json["server_id"]
-WAITER_ROLE_IDS = setup_json["waiter_role_ids"]
-ADMIN_MOD_ROLE_IDS = setup_json["admin_mod_role_ids"]
-CHEF_ROLE_ID = setup_json["chef_role_id"]
-AMARYLLIS_ID = setup_json["dahlia_id"]
+# Determine if we're in production mode
+# Check for explicit ENVIRONMENT variable, or if running on Heroku (DYNO is set)
+IS_PRODUCTION = os.environ.get('ENVIRONMENT', '').lower() == 'production' or os.environ.get('DYNO') is not None
+
+# Select server and channel IDs based on environment
+env_config = setup_production if IS_PRODUCTION else setup_test
+SERVER_ID = env_config["server_id"]
+SPAM_CHANNEL_ID = env_config["thread_id"]
+PUBLIC_CHANNEL_IDS = env_config["public_channel_ids"]
+PRIVATE_CHANNEL_IDS = env_config["private_channel_ids"]
+STAFF_CHANNEL_IDS = env_config["staff_channel_ids"]
+
+# Shared configuration (same for both environments)
+WAITER_ROLE_IDS = shared_config["waiter_role_ids"]
+ADMIN_MOD_ROLE_IDS = shared_config["admin_mod_role_ids"]
+CHEF_ROLE_ID = shared_config["chef_role_id"]
+AMARYLLIS_ID = shared_config["dahlia_id"]
 
 IMAGE_KEYS = ['paragon', 'charms', 'charmspvp', 'charms_reference', 'talents', '!submit prompt']
-IMAGE_KEYS.extend(setup_json[DR])
-IMAGE_KEYS.extend(setup_json[PL])
-IMAGE_KEYS.extend(setup_json[RR])
+IMAGE_KEYS.extend(shared_config[DR])
+IMAGE_KEYS.extend(shared_config[PL])
+IMAGE_KEYS.extend(shared_config[RR])
 
 ROBERTO_ID = 1332595381095366656
-
-PUBLIC_CHANNEL_IDS = setup_json["public_channel_ids"]
-PRIVATE_CHANNEL_IDS = setup_json["private_channel_ids"]
-STAFF_CHANNEL_IDS = setup_json["staff_channel_ids"]
-SPREADSHEET_IDS = setup_json["spreadsheet_ids"]
+SPREADSHEET_IDS = shared_config["spreadsheet_ids"]
 CHANNEL_IDS_DICT = {pub_id : PRIVATE_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
 STAFF_CHANNEL_IDS_DICT = {pub_id : STAFF_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
 

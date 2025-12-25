@@ -2,4 +2,6 @@
 .DS_STORE
 __pycache__
 503292757494857739.png
-google_account.json
+.env
+.venv
+WORKING_DOCUMENTATION.md

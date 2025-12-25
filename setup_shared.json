@@ -1,0 +1,52 @@
+{
+    "admin_mod_role_ids": [1332091816610369697, 1332135029618380820],
+    "waiter_role_ids": [1366553665816625253, 1366553846234746971, 1332135029618380820],
+    "chef_role_id": 1332134942787764284,
+    "dahlia_id": 503292757494857739,
+    "burger_king_id": 1332109296988717256,
+    "spreadsheet_ids": {
+        "Test": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "King Croaker": "1KEmUP9p4e7_umM9LvKN4UiYSnzruyi3X5wz1LcQmZz0",
+        "Necrodrakon": "1rZm9JuboTv4dTTxow1NTMnXVYliBT1yVU5JYBVd_t4A",
+        "Thalassa": "1-r5FpciGpxfgvcAPcQKX_tiOwHdwnfKXdmOMHvaItG4",
+        "Nocturne Judicator": "1QDNq6Bxy1I2AtcEisGEMEcN9lHuVh24SiyJx7IGzLZA",
+        "Sigmund": "1MWExWs1WLZkVykw-YjZdgaj2W724QYZoDBZ6ZFNYB3s",
+        "Mirage Frostpike": "14sz_r_29afJ7p08SAIN_24Zcm6yqRFfd5EOk0zDeyvU",
+        "Magmazard": "1ZCj0ygkDoyDSxVyyy-YKtnJZkzdn-H2wa81LV8qNPk0",
+        "Blightshroom": "1FkU4MNhYRjhg7dkOmUvrROIgWY3tyJeu-tzmQYoNqY8",
+        "Gloommaw": "1V440avyPWU8cbqsdEnJqphrBwLvgfo6SRGO8dyBPh4E",
+        "Doomscourge": "1PUfT4Jo0zSHa5n94S9-UH7eVNLyhVrmACZuW5T3FeNE",
+        "Charge": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Clash": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Conquer": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
+        "Age of Calamity": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14"
+    },
+    "ravaged_realm": [
+        "Immortal (Graveborns)",
+        "Dauntless (Maulers)",
+        "Sylvan (Wilders)",
+        "Aurora (Lightbearers)"
+    ],
+    "dream_realm": [
+        "King Croaker",
+        "Necrodrakon",
+        "Thalassa",
+        "Nocturne Judicator",
+        "Sigmund",
+        "Mirage Frostpike",
+        "Magmazard",
+        "Blightshroom"
+    ],
+    "primal_lords": [
+        "Cinderwings",
+        "Gloommaw",
+        "Doomscourge"
+    ],
+    "titan_reaver": [
+        "Charge",
+        "Clash",
+        "Conquer",
+        "Age of Calamity"
+    ]
+}
+
