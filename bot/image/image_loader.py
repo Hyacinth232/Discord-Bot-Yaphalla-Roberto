@@ -1,18 +1,18 @@
-import os
+from pathlib import Path
 
 import pygame
 
-from constants import HEX_CATEGORIES
-from hex import Hex
+from bot.core.constants import (HEX_CATEGORIES, HEXES_FOLDER, ICON_PATH,
+                                YAP_PATH)
+from bot.image.hex import Hex
 
-HEXES_FOLDER = "Hexes"
-ICON_PATH = "icon.png"
-YAP_PATH = "Yap.png"
 
 class Image_Loader:
+    """Singleton class for loading and caching game asset images."""
     _instance = None
     
     def __new__(cls):
+        """Create singleton instance and load all assets."""
         if cls._instance is None:
             print("Created Image Maker Instance")
             cls._instance = super().__new__(cls)
@@ -21,25 +21,27 @@ class Image_Loader:
             cls._instance.load_yap(YAP_PATH)
         return cls._instance
     
-    def load_tiles(self, hexes_folder: str) -> dict:
+    def load_tiles(self, hexes_folder: Path) -> dict:
+        """Load all hex tile images from folder structure."""
         self.tiles = {}
         for factions in HEX_CATEGORIES.values():
             for faction, names in factions.items():
                 for name in names:
-                    file_path = os.path.join(hexes_folder, faction, name + ".png")
+                    file_path = hexes_folder / faction / f"{name}.png"
                     
-                    if os.path.exists(file_path):
-                        tile = pygame.image.load(file_path)
+                    if file_path.exists():
+                        tile = pygame.image.load(str(file_path))
                         tile = pygame.transform.smoothscale(tile, (Hex.HALF_PNG_WIDTH * 2, Hex.HALF_PNG_HEIGHT * 2))
                         self.tiles[name] = tile
-                        # print("Successfully loaded {}.".format(name))
                     else:
                         print("{} does not exist.".format(name))
         
-    def load_icon(self, icon_path: str):
-        self.icon = pygame.image.load(icon_path)
+    def load_icon(self, icon_path: Path):
+        """Load icon image and scale to appropriate size."""
+        self.icon = pygame.image.load(str(icon_path))
         self.icon = pygame.transform.smoothscale(self.icon, (Hex.HALF_PNG_WIDTH, Hex.HALF_PNG_WIDTH))
     
-    def load_yap(self, yap_path: str):
-        self.yap = pygame.image.load(yap_path)
+    def load_yap(self, yap_path: Path):
+        """Load Yap image and scale to appropriate size."""
+        self.yap = pygame.image.load(str(yap_path))
         self.yap = pygame.transform.smoothscale(self.yap, (Hex.HALF_PNG_WIDTH * 2, Hex.HALF_PNG_HEIGHT * 2))

@@ -4,12 +4,13 @@ import os
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
-from constants import GSHEETS_INFO, SPREADSHEET_IDS
-from utils import sanitize_user_input
+from bot.core.constants import GSHEETS_INFO, SPREADSHEET_IDS
+from bot.core.utils import sanitize_user_input
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 def _get_creds_from_env():
+    """Get Google Sheets credentials from environment."""
     return Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
 
 agcm = AsyncioGspreadClientManager(_get_creds_from_env)
@@ -27,6 +28,7 @@ async def add_row(
     units: dict=None,
     image_url: str=None
     ):
+    """Add a new row to the Google Sheet for the specified boss."""
     try:
         sheet_id = SPREADSHEET_IDS[boss_name]
         gc = await agcm.authorize()

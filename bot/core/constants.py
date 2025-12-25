@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -9,27 +10,37 @@ MODE = True
 
 
 ### Housekeeping
-def read_json(file_name) -> dict:
-    print("Reading config file: {}".format(file_name))
-    with open(file_name, "r") as f:
+# Project root is 3 levels up
+_BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+def read_json(file_path: Path | str) -> dict:
+    """Read JSON file from Path object or string path."""
+    print("Reading config file: {}".format(file_path))
+    with open(file_path, "r") as f:
         data = json.load(f)
     return data
 
-with open( "usage.txt", "r") as f:
-    USAGE = f.read()
-    
-with open("roberto.txt", "r") as f:
-    ROBERTO_TEXT = f.read()
+# Read text files using Path objects directly
+USAGE = (_BASE_DIR / "usage.txt").read_text()
+ROBERTO_TEXT = (_BASE_DIR / "roberto.txt").read_text()
 
-# Load configuration files
-shared_config = read_json("setup_shared.json")
-setup_production = read_json("setup_production.json")
-setup_test = read_json("setup_test.json")
+# Load configuration files - Path objects work directly with open()
+shared_config = read_json(_BASE_DIR / "config" / "setup_shared.json")
+setup_production = read_json(_BASE_DIR / "config" / "setup_production.json")
+setup_test = read_json(_BASE_DIR / "config" / "setup_test.json")
 
-aliases_json = read_json("aliases.json")
-EMOJIS = read_json("emojis.json")
-MAPS = read_json("maps.json")
-HEX_CATEGORIES = read_json("hexes.json")
+aliases_json = read_json(_BASE_DIR / "data" / "aliases.json")
+EMOJIS = read_json(_BASE_DIR / "data" / "emojis.json")
+MAPS = read_json(_BASE_DIR / "data" / "maps.json")
+HEX_CATEGORIES = read_json(_BASE_DIR / "data" / "hexes.json")
+
+### Asset Paths
+# All asset paths centralized here for easy maintenance
+HEXES_FOLDER = _BASE_DIR / "assets" / "images" / "hexes"
+ICON_PATH = _BASE_DIR / "assets" / "images" / "icon.png"
+YAP_PATH = _BASE_DIR / "assets" / "images" / "Yap.png"
+FONT_PATH = _BASE_DIR / "assets" / "fonts" / "Lato-Regular.ttf"
+CIRC_FOLDER = _BASE_DIR / "assets" / "images" / "templates"
 
 ### constants
 DR = 'dream_realm'
@@ -52,8 +63,6 @@ if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN environment variable is required")
 
 ### setup_json
-# Determine if we're in production mode
-# Check for explicit ENVIRONMENT variable, or if running on Heroku (DYNO is set)
 IS_PRODUCTION = os.environ.get('ENVIRONMENT', '').lower() == 'production' or os.environ.get('DYNO') is not None
 
 # Select server and channel IDs based on environment

@@ -4,19 +4,20 @@ from pathlib import Path
 
 import discord
 
-from analyze_image import Analyze_Image
-from commands_backend import Commands_Backend
-from constants import SERVER_ID, SPAM_CHANNEL_ID
-from enum_classes import ChannelType
-from google_sheets import add_row
-from utils import (to_channel_name, to_channel_type_id, to_priv_id, to_pub_id,
-                   to_staff_id)
+from bot.core.commands_backend import Commands_Backend
+from bot.core.constants import SERVER_ID, SPAM_CHANNEL_ID
+from bot.core.enum_classes import ChannelType
+from bot.core.utils import (to_channel_name, to_channel_type_id, to_priv_id,
+                            to_pub_id, to_staff_id)
+from bot.image.analyze_image import Analyze_Image
+from bot.submission.google_sheets import add_row
 
 
 class Submit_Collect:
+    """Handle formation submission and collection from Discord messages."""
     def __init__(self, bot: discord.Client, backend: Commands_Backend, forwarder: discord.Member, channel_id: int, 
                 orig_msg: discord.Message=None, attachments: list[discord.Attachment]=None, content: str=None):
-        
+        """Initialize submission collector with bot, backend, and message context."""
         self.bot = bot
         self.backend = backend
         self.analyzer = Analyze_Image()
@@ -46,6 +47,7 @@ class Submit_Collect:
                             if attachment.content_type and 'image' in attachment.content_type]
         
     def fill_form(self, resonance: str, ascension: str, credit_name: str, damage: str, notes: str):
+        """Fill form data for spreadsheet submission."""
         self.form = True
         self.resonance = resonance
         self.ascension = ascension
@@ -54,6 +56,7 @@ class Submit_Collect:
         self.notes = notes
         
     async def __get_member_name(self, member_id):
+        """Get display name for member by ID."""
         try:
             guild = self.bot.get_guild(SERVER_ID)
             if not guild:
@@ -69,6 +72,7 @@ class Submit_Collect:
         return ""
         
     async def ctx_submit_message_wrapper(self) -> list[tuple]:
+        """Process message and extract formation data."""
         author_id = self.forwarder.id if self.has_no_msg else self.orig_msg.author.id
         forwarder_id = self.forwarder.id
         
@@ -92,6 +96,7 @@ class Submit_Collect:
         #create_task(self.__forward_formation(bytes_list))
         
     def formations_to_files(self, formations: list[tuple]):
+        """Convert formation image bytes to Discord file objects."""
         files = []
         
         if not formations:
@@ -105,6 +110,7 @@ class Submit_Collect:
         return files
     
     async def send_images(self, interaction: discord.Interaction, formations: list[tuple], ephemeral: bool=True):
+        """Send formation images to user via Discord interaction."""
         files = self.formations_to_files(formations)
         if not files:
             await interaction.followup.send("Thank you for the submission!", ephemeral=ephemeral)
@@ -116,6 +122,7 @@ class Submit_Collect:
             
     
     async def send_form(self, formations: list[tuple], new_url: str=None, image_urls: list[str]=None):
+        """Submit form data to Google Sheets."""
         if not self.form:
             print("Huh")
             return
@@ -154,6 +161,7 @@ class Submit_Collect:
                 image_url)
         
     async def __get_text(self, channel_type: ChannelType, new_url: str=None) -> str:
+        """Generate formatted text for submission message."""
         text = "## Submission\n"
         if channel_type == ChannelType.STAFF:
             text += "**ID:** {}\n".format(self.counter)
@@ -195,11 +203,11 @@ class Submit_Collect:
         return text
     
     async def get_formation(self, index=-1) -> list[tuple]:
+        """Extract formation data from attachments."""
         if not self.attachments:
             return
         
         formations = await self.__process_attachments_driver(index)
-        #for image_bytes_stream, units, img_bytes in formations:
         for units, img_bytes in formations:
             # Don't await
             create_task(self.__log_formation(units, img_bytes))
@@ -207,6 +215,7 @@ class Submit_Collect:
         return formations
     
     def make_embeds(self, text: str, footer: str, files: list[discord.File]=None):
+        """Create Discord embeds for submission message."""
         main_embed = discord.Embed(
             url="https://www.yaphalla.com",
             description=text,
@@ -225,10 +234,8 @@ class Submit_Collect:
                 
         return embeds
     
-    """
-        Forwards a message to the correct channel
-    """
     async def forward_formation(self, channel_type: ChannelType, formations: list[tuple]=None, url: str=None) -> discord.Message:
+        """Forward formation submission to appropriate channel."""
         files = []
         
         # If there are any images to forward
@@ -273,10 +280,8 @@ class Submit_Collect:
             
         return sent_msg
             
-    """
-        Collects one formation from a given message
-    """
     async def __process_attachments_driver(self, index: int=-1) -> list:
+        """Process all attachments or specific index to extract formations."""
         if index != -1:
             index = min(max(index - 1, 0), len(self.attachments) - 1)
             formation = await self.__process_attachment(self.attachments[index])
@@ -293,10 +298,8 @@ class Submit_Collect:
             
         return formations
     
-    """
-        Calls Analyzer to extract a single formation from one given attachment
-    """
     async def __process_attachment(self, attachment: discord.Attachment) -> tuple:
+        """Extract formation data from single attachment using image analyzer."""
         if not attachment.content_type or 'image' not in attachment.content_type:
             return None
         
@@ -315,11 +318,8 @@ class Submit_Collect:
             
         return (units, img_bytes)
         
-    """
-        Uses Backend to create a formation
-    """
     async def __draw_formation(self, units: list) -> str:
-        #print(units)
+        """Generate formation image using backend."""
         pairs = ["{} {}".format(unit['name'], unit['number']) for unit in units]
         chan_name = to_channel_name(self.channel_id)
         if chan_name is not None and "Nocturne Judicator" in chan_name:
@@ -334,6 +334,7 @@ class Submit_Collect:
         return filename
     
     async def __get_or_fetch_channel(self, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:
+        """Get or fetch Discord channel by ID."""
         channel: discord.channel = None
         try:
             guild = self.bot.get_guild(SERVER_ID)
@@ -350,14 +351,13 @@ class Submit_Collect:
         return channel
     
     async def __channel_fetch_fail(self, channel_id: int):
+        """Log channel fetch failure to spam channel."""
         spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
         if spam_chan:
             await spam_chan.send("Failed to fetch <#{}>".format(channel_id))
     
-    """
-        Logging everything in the spam channel given by SPAM_CHANNEL_ID
-    """
     async def __log_formation(self, units: list, img_bytes):
+        """Log formation data to spam channel for debugging."""
         spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
         files = []
         if img_bytes:

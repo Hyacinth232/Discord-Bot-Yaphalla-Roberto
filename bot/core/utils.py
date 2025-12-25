@@ -1,9 +1,9 @@
 import re
 
-from constants import (ALIAS_DICT, EMOJIS, PRIVATE_CHANNEL_IDS,
-                       PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR_BOSSES,
-                       STAFF_CHANNEL_IDS)
-from enum_classes import ChannelType
+from bot.core.constants import (ALIAS_DICT, EMOJIS, PRIVATE_CHANNEL_IDS,
+                                PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR_BOSSES,
+                                STAFF_CHANNEL_IDS)
+from bot.core.enum_classes import ChannelType
 
 
 def sanitize_user_input(value: str) -> str:

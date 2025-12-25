@@ -1,15 +1,17 @@
 import discord
 
-from commands_backend import Commands_Backend
-from enum_classes import ChannelType
-from submit_collect import Submit_Collect
+from bot.core.commands_backend import Commands_Backend
+from bot.core.enum_classes import ChannelType
+from bot.submission.submit_collect import Submit_Collect
 
 DISCORD_AVATAR_URL = "https://cdn.discordapp.com/embed/avatars/0.png"
 
 class BasicModal(discord.ui.Modal, title="Edit and Submit Formation"):
+    """Modal for editing and submitting formation text."""
     edited_text = discord.ui.TextInput(label="Edit the text", style=discord.TextStyle.paragraph, required=False)
 
     def __init__(self, bot: discord.Client, backend: Commands_Backend, channel_id: int, original_message: discord.Message):
+        """Initialize modal with bot, backend, and message context."""
         super().__init__()
         self.bot = bot
         self.backend = backend
@@ -20,6 +22,7 @@ class BasicModal(discord.ui.Modal, title="Edit and Submit Formation"):
         self.edited_text.default = content_msg.content
         
     async def on_submit(self, interaction: discord.Interaction):
+        """Handle form submission."""
         await interaction.response.defer(ephemeral=True)
         
         submitter = Submit_Collect(
@@ -38,8 +41,10 @@ class BasicModal(discord.ui.Modal, title="Edit and Submit Formation"):
     
 
 class SpreadsheetModal(discord.ui.Modal):
+    """Modal for submitting formation data to spreadsheet."""
     def __init__(self, bot: discord.Client, backend: Commands_Backend, channel_id: int, show_public: bool=False,
                 original_message: discord.Message=None, attachments: list[discord.Attachment]=None):
+        """Initialize spreadsheet submission modal."""
         super().__init__(title="Submit Formation (by Take)")
             
         self.credits_field = discord.ui.TextInput(
@@ -103,6 +108,7 @@ class SpreadsheetModal(discord.ui.Modal):
         self.add_item(self.notes_field)
 
     async def on_submit(self, interaction: discord.Interaction):
+        """Handle spreadsheet form submission."""
         await interaction.response.defer(ephemeral=True)
         
         submitter = Submit_Collect(

@@ -5,11 +5,12 @@ import discord
 from discord.ext import commands, tasks
 from PIL import Image
 
-from commands_frontend import Commands_Frontend
-from constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES, AMARYLLIS_ID,
-                       ARTIFACTS, BOT_TOKEN, DR, FILLS, IMAGE_KEYS, LINES,
-                       MAPS, PL, PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
-                       UNITS, USAGE, WAITER_ROLE_IDS)
+from bot.core.commands_frontend import Commands_Frontend
+from bot.core.constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES,
+                                AMARYLLIS_ID, ARTIFACTS, BOT_TOKEN, DR, FILLS,
+                                IMAGE_KEYS, LINES, MAPS, PL,
+                                PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
+                                UNITS, USAGE, WAITER_ROLE_IDS)
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -23,6 +24,7 @@ commands_frontend = Commands_Frontend(bot)
 
 @bot.event
 async def on_ready():
+    """Initialize bot on startup."""
     print(bot.user)
     
     guild = discord.Object(id=SERVER_ID)
@@ -38,36 +40,44 @@ async def on_ready():
 
 ### AUTOCOMPLETES ###
 async def all_name_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for all valid unit/artifact names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in ALL_VALID_NAMES
             if name.lower().startswith(current.lower())][:25]
 
 async def units_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for unit names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in UNITS
             if name.lower().startswith(current.lower())][:25]
 
 async def artifacts_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for artifact names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in ARTIFACTS
             if name.lower().startswith(current.lower())][:25]
     
 async def set_map_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for map/arena names."""
     return [discord.app_commands.Choice(name=map, value=map) for map in MAPS
             if len(map) > 2 and current.lower() in map.lower()][:25]
 
 async def formations_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for saved formation names."""
     user_id = interaction.user.id
     return [discord.app_commands.Choice(name=name, value=name) for name in commands_frontend.get_names_list(user_id) if current in name]
 
 async def fills_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for fill hex names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in FILLS + ["None"]
             if name.lower().startswith(current.lower())][:25]
     
 async def lines_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for outline hex names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in LINES
             if name.lower().startswith(current.lower())][:25]
     
 channel_names_plus_default = list(PUBLIC_CHANNEL_IDS.keys())
 channel_names_plus_default.append("DEFAULT")
 async def channels_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for channel names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in channel_names_plus_default
             if name.lower().startswith(current.lower())][:25]
     
@@ -83,6 +93,7 @@ tile_types = [discord.app_commands.Choice(name='Artifacts', value="A"), discord.
 ### LOOP TASK
 @tasks.loop(hours=6)
 async def rotate_channels():
+    """Periodic task to rotate channel permissions."""
     await commands_frontend.rotate_channels(bot)
     
 #####################

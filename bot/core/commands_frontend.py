@@ -4,33 +4,38 @@ from datetime import datetime, timezone
 import discord
 from discord.ext import commands
 
-from commands_backend import Commands_Backend
-from constants import (AMARYLLIS_ID, CHANNEL_IDS_DICT, PRIVATE_CHANNEL_IDS,
-                       PUBLIC_CHANNEL_IDS, ROBERTO_TEXT, SERVER_ID,
-                       shared_config)
-from enum_classes import TRANSLATE, ChannelType, Language
-from modals import BasicModal, SpreadsheetModal
-from submit_collect import Submit_Collect
-from utils import (clean_input_str, get_emoji, is_kitchen_channel,
-                   replace_emojis)
-from views import DropdownView, YesNoView
+from bot.core.commands_backend import Commands_Backend
+from bot.core.constants import (AMARYLLIS_ID, CHANNEL_IDS_DICT,
+                                PRIVATE_CHANNEL_IDS, PUBLIC_CHANNEL_IDS,
+                                ROBERTO_TEXT, SERVER_ID, shared_config)
+from bot.core.enum_classes import TRANSLATE, ChannelType, Language
+from bot.core.utils import (clean_input_str, get_emoji, is_kitchen_channel,
+                            replace_emojis)
+from bot.submission.submit_collect import Submit_Collect
+from bot.ui.modals import BasicModal, SpreadsheetModal
+from bot.ui.views import DropdownView, YesNoView
 
 #s4 START_DATE = datetime(2025, 5, 23, tzinfo=timezone.utc)
 # s5
 START_DATE = datetime(2025, 9, 26, tzinfo=timezone.utc)
 
 def clean_name(text: str):
+    """Clean and truncate formation name to 35 characters."""
     return clean_input_str(text)[:35]
 
 def get_emojis(names: list[str]) -> str:
+    """Convert list of names to space-separated emoji string."""
     return " ".join([get_emoji(name) for name in names])
 
 class Commands_Frontend:
+    """Frontend layer handling Discord interactions and user-facing responses."""
     def __init__(self, bot: discord.Client):
+        """Initialize frontend with bot instance and backend."""
         self.backend = Commands_Backend()
         self.bot = bot
 
     def infographic(self, value: dict) -> str:
+        """Format infographic text with Discord timestamp."""
         text = value.get('text', '')
         timestamp = value.get('timestamp', '')
         
@@ -39,25 +44,24 @@ class Commands_Frontend:
         return result
     
     async def get_image_embed(self, interaction: discord.Interaction, key: str, ephemeral=False):
+        """Send infographic image link to user."""
         value = self.backend.users.db.get_image_link(key)
         infographic = self.infographic(value)
         await interaction.response.send_message(infographic, ephemeral=ephemeral)
     
     def get_names_list(self, user_id: int):
+        """Get list of saved formation names for user."""
         return self.backend.get_names_list(user_id)
-    """
-        Error message
-    """
+    
     async def error_message(self, interaction: discord.Interaction, lang: Language=Language.EN, followup=False):
+        """Send error message to user."""
         if followup:
             await interaction.followup.send(TRANSLATE['Error'][lang], ephemeral=True)
         else:
             await interaction.response.send_message(TRANSLATE['Error'][lang], ephemeral=True)
             
-    """
-        Add text to mongodb databse
-    """
     async def set_image_link(self, interaction: discord.Interaction, key: str, text: str):
+        """Update image link in database and send confirmation."""
         timestamp = int(datetime.now(timezone.utc).timestamp())
         text = replace_emojis(text)
         self.backend.users.db.set_image_link(key, text, timestamp)
@@ -66,24 +70,21 @@ class Commands_Frontend:
         infographic = self.infographic(value)
         await interaction.response.send_message(infographic)
     
-    """
-        Emojies
-    """
     async def emojify_wrapper(self, interaction: discord.Interaction, text: str):
+        """Convert emoji placeholders in text to actual emojis."""
         text = replace_emojis(text)
         await interaction.response.send_message(text, ephemeral=False)
         
     async def emoji_wrapper(self, interaction: discord.Interaction, name: str, show_public: bool):
+        """Send emoji for given character name."""
         emoji = self.backend.name_to_emoji(name)
         if emoji:
             await interaction.response.send_message(emoji, ephemeral=not show_public)
             return
         await interaction.response.send_message("Invalid name.", ephemeral=not show_public)
         
-    """
-        Edit formation
-    """
     async def add_wrapper(self, interaction: discord.Interaction, pairs: str, lang: Language=Language.EN):
+        """Add units/artifacts to formation from pairs string."""
         added_names, filename = self.backend.add_list(interaction.user.id, pairs)
         
         if added_names:
@@ -93,6 +94,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
         
     async def remove_wrapper(self, interaction: discord.Interaction, names_or_indices: str, lang: Language=Language.EN):
+        """Remove units/artifacts from formation."""
         removed_names, filename = self.backend.remove_list(interaction.user.id, names_or_indices)
         
         if removed_names:
@@ -102,6 +104,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
         
     async def swap_wrapper(self, interaction: discord.Interaction, pairs: str, lang: Language=Language.EN):
+        """Swap units/artifacts in formation."""
         swapped_names, filename = self.backend.swap_list(interaction.user.id, pairs)
         if swapped_names:
             await interaction.response.send_message("{}{}".format(TRANSLATE['Swapped'][lang], get_emojis(swapped_names)), ephemeral=True)
@@ -110,6 +113,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def add_one_wrapper(self, interaction: discord.Interaction, unit: str, idx: int, lang: Language=Language.EN):
+        """Add single unit/artifact to formation."""
         name, filename = self.backend.add_one(interaction.user.id, unit, idx)
         
         if name:
@@ -119,6 +123,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def remove_one_wrapper(self, interaction: discord.Interaction, name: str, lang: Language=Language.EN):
+        """Remove single unit/artifact from formation."""
         name, filename = self.backend.remove_one(interaction.user.id, name)
         
         if name:
@@ -128,6 +133,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
         
     async def swap_pair_wrapper(self, interaction: discord.Interaction, name1: str, name2: str, lang: Language=Language.EN):
+        """Swap two units/artifacts in formation."""
         swapped_names, filename = self.backend.swap_pair(interaction.user.id, name1, name2)
         if swapped_names:
             await interaction.response.send_message("{}{}".format(TRANSLATE['Swapped'][lang], get_emojis(swapped_names)), ephemeral=True)
@@ -136,6 +142,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def move_one_wrapper(self, interaction: discord.Interaction, name: str, idx: int, lang: Language=Language.EN):
+        """Move unit/artifact to new position."""
         name, filename = self.backend.move_one(interaction.user.id, name, idx)
         if name:
             await interaction.response.send_message("{}{}".format('Moved ', get_emoji(name)), ephemeral=True)
@@ -144,22 +151,26 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
                 
     async def display_formation_wrapper(self, interaction: discord.Interaction, ephemeral=True, display_mode=False):
+        """Display current formation image."""
         user_id = interaction.user.id
         self.backend.initialize_user(user_id)
         filename = self.backend.show_image(user_id=user_id, is_private=not display_mode)
         await interaction.response.send_message(file=discord.File(filename), ephemeral=ephemeral)
         
     async def clear_wrapper(self, interaction: discord.Interaction, lang: Language=Language.EN):
+        """Clear current formation."""
         filename = self.backend.clear_user(interaction.user.id)
         await interaction.response.send_message(TRANSLATE['Clear'][lang], ephemeral=True)
         await interaction.followup.send(file=discord.File(filename), ephemeral=True)
         
     async def mirror_wrapper(self, interaction: discord.Interaction, lang: Language=Language.EN):
+        """Mirror formation horizontally."""
         filename = self.backend.mirror_formation(interaction.user.id)
         await interaction.response.send_message('Mirrored formation', ephemeral=True)
         await interaction.followup.send(file=discord.File(filename), ephemeral=True)
         
     async def set_map_wrapper(self, interaction: discord.Interaction, map: str, user_id: int=None, save_map: bool=False, lang: Language=Language.EN):
+        """Set formation map."""
         if user_id is None:
             user_id = interaction.user.id
         #map = clean_name(map)
@@ -173,6 +184,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def set_name_wrapper(self, interaction: discord.Interaction, title: str, lang: Language=Language.EN):
+        """Set formation name."""
         user_id = interaction.user.id
         title = clean_name(title)
         title = self.backend.set_name(user_id, title)
@@ -182,6 +194,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def show_title_wrapper(self, interaction: discord.Interaction, show_title: bool, lang: Language=Language.EN):
+        """Toggle formation title display."""
         filename = self.backend.set_settings(interaction.user.id, 'show_title', show_title)
         if show_title:
             await interaction.response.send_message('Showing title.', ephemeral=True)
@@ -193,6 +206,7 @@ class Commands_Frontend:
             await interaction.followup.send(file=discord.File(filename), ephemeral=True)
             
     async def show_numbers_wrapper(self, interaction: discord.Interaction, show_numbers: bool, lang: Language=Language.EN):
+        """Toggle tile number display."""
         filename = self.backend.set_settings(interaction.user.id, 'show_numbers', show_numbers)
         if show_numbers:
             await interaction.response.send_message('Showing tile numbers.', ephemeral=True)
@@ -204,6 +218,7 @@ class Commands_Frontend:
             await interaction.followup.send(file=discord.File(filename), ephemeral=True)
             
     async def make_transparent_wrapper(self, interaction: discord.Interaction, make_transparent: bool, lang: Language=Language.EN):
+        """Toggle base tile transparency."""
         filename = self.backend.set_settings(interaction.user.id, 'make_transparent', make_transparent)
         if make_transparent:
             await interaction.response.send_message('Base tiles are now transparent.', ephemeral=True)
@@ -216,6 +231,7 @@ class Commands_Frontend:
             
     async def set_base_hex(self, interaction: discord.Interaction, idx: int, hex_name: str,
                            user_id = None, lang: Language=Language.EN, ephemeral=True):
+        """Set base hex fill or outline color."""
         if user_id is None:
             user_id = interaction.user.id
             
@@ -233,6 +249,7 @@ class Commands_Frontend:
             
     async def yap_set_base_hex(self, interaction: discord.Interaction, fill_name: str, line_name: str, make_transparent: bool,
                            user_id = None, lang: Language=Language.EN, ephemeral=False):
+        """Admin command to set base hex colors for channel."""
         if user_id is None:
             user_id = interaction.user.id
             
@@ -254,6 +271,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def load_wrapper(self, interaction: discord.Interaction, name: str, lang: Language=Language.EN):
+        """Load saved formation by name."""
         user_id = interaction.user.id
         name = clean_name(name)
         
@@ -283,6 +301,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang, True)
             
     async def delete_wrapper(self, interaction: discord.Interaction, name: str, lang: Language=Language.EN):
+        """Delete saved formation."""
         user_id = interaction.user.id
         name = clean_name(name)
         names_lst = self.backend.get_names_list(user_id)
@@ -303,15 +322,18 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def list_formations_wrapper(self, interaction: discord.Interaction, lang: Language=Language.EN):
+        """List all saved formation names."""
         user_id = interaction.user.id
         await interaction.response.send_message("```{}```".format(', '.join(self.get_names_list(user_id))), ephemeral=True)
         
     async def current_name_wrapper(self, interaction: discord.Interaction, lang: Language=Language.EN):
+        """Get current formation name."""
         user_id = interaction.user.id
         name = self.backend.get_name(user_id)
         await interaction.response.send_message("Your current formation name is `{}`.".format(name), ephemeral=True)
         
     async def save_wrapper(self, interaction: discord.Interaction, lang: Language=Language.EN):
+        """Save current formation."""
         user_id = interaction.user.id
         success, new_name = self.backend.update_formation(user_id)
         if success:
@@ -320,6 +342,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang)
             
     async def rename_wrapper(self, interaction: discord.Interaction, new_name: str, lang: Language=Language.EN):
+        """Rename current formation."""
         user_id = interaction.user.id
         new_name = clean_name(new_name)
         names_lst = self.backend.get_names_list(user_id)
@@ -343,6 +366,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang, True)
             
     async def save_as_wrapper(self, interaction: discord.Interaction, new_name: str, lang: Language=Language.EN):
+        """Save current formation with new name."""
         user_id = interaction.user.id
         new_name = clean_name(new_name)
         names_lst = self.backend.get_names_list(user_id)
@@ -371,6 +395,7 @@ class Commands_Frontend:
             await self.error_message(interaction, lang, True)
             
     async def dropdown_wrapper(self, interaction: discord.Interaction, game_mode: str):
+        """Display dropdown menu for boss selection."""
         text = '\n'.join(["<#{}>".format(PUBLIC_CHANNEL_IDS[boss_name]) for boss_name in shared_config[game_mode]])
         text += '\n\nView Boss Infographs by selecting a Boss below.'
         title = game_mode.replace('_', ' ').title()
@@ -386,6 +411,7 @@ class Commands_Frontend:
         view.message = await interaction.original_response()
     
     async def get_timestamp(self, interaction: discord.Interaction, year: int, month: int, day: int, hour: int):
+        """Generate Discord timestamp from date/time."""
         try:
             dt = datetime(year, month, day, hour, 0, 0, tzinfo=timezone.utc)
             unix_timestamp = int(dt.timestamp())
@@ -394,6 +420,7 @@ class Commands_Frontend:
             await self.error_message(interaction)
     
     async def time_now_wrapper(self, interaction: discord.Interaction):
+        """Get current time as Discord timestamp."""
         try:
             dt = datetime.now(timezone.utc)
             unix_timestamp = int(dt.timestamp())
@@ -402,6 +429,7 @@ class Commands_Frontend:
             await self.error_message(interaction)
             
     async def collect_wrapper(self, ctx: commands.Context, index: int):
+        """Collect formation from replied message."""
         if not ctx.message.reference:
             return
         

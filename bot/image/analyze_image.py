@@ -1,8 +1,11 @@
 import io
 import os
+from pathlib import Path
 
 import cv2
 import numpy as np
+
+from bot.core.constants import CIRC_FOLDER
 
 BOUNDARIES = [{
     1: [0.328, 0.423, 0.435, 0.521],
@@ -33,30 +36,24 @@ BOUNDARIES = [{
     -1: [0.115, 0.225, 0.800, 0.920]
 }]
 
-
-CIRC_FOLDER = 'Cropped_Circles'
 # RECT_FOLDER = 'Cropped_Rectangles'
 CIRCLE_TEMPLATE_SIZE = (96, 96)
 RECT_TEMPLATE_SIZE = (110, 118)
 
 class Analyze_Image:
+    """Analyze formation images to extract unit and artifact positions."""
     def __init__(self):
+        """Initialize analyzer and load template images."""
         self.clear()
         
-        # Dictionary to store templates to compare against
         self.circ_templates = {}
-        for filename in os.listdir(CIRC_FOLDER):
-            # For all images
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
-                file_path = os.path.join(CIRC_FOLDER, filename)
-                # Read image
-                input_img = cv2.imread(file_path, cv2.IMREAD_UNCHANGED)
+        for file_path in CIRC_FOLDER.iterdir():
+            if file_path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
+                input_img = cv2.imread(str(file_path), cv2.IMREAD_UNCHANGED)
                 if input_img is None:
                     raise ValueError
                 
-                # Get filename w/o extension
-                name = os.path.splitext(os.path.basename(filename))[0]
-                # Store in dict
+                name = file_path.stem
                 template = cv2.resize(input_img, CIRCLE_TEMPLATE_SIZE, interpolation=cv2.INTER_AREA)
                 self.circ_templates[name] = template
         """
@@ -79,6 +76,7 @@ class Analyze_Image:
         """
                 
     def clear(self):
+        """Reset all analysis state."""
         self.image = None
         self.gray = None
         self.height = 0,
@@ -92,10 +90,9 @@ class Analyze_Image:
         self.rectangle = None
         
     def process_image(self, image_bytes, rr_map: bool=False):
-        # Clear to start
+        """Process image bytes to extract formation data."""
         self.clear()
         
-        # images_bytes to cv2 image
         np_array = np.frombuffer(image_bytes, np.uint8)
         self.image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
         self.gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
@@ -138,6 +135,7 @@ class Analyze_Image:
         return self.categorize()
 
     def pad_to_aspect(self, image, aspect_ratio):
+        """Pad image to match target aspect ratio."""
         h, w = image.shape[:2]
         current_ratio = w / h
 
@@ -153,10 +151,12 @@ class Analyze_Image:
         return padded
     
     def get_rectangle(self):
+        """Extract rectangle region for artifact detection."""
         int_bounds = [int(bound) for bound in self.bounds[-1]]
         self.rectangle = self.image[int_bounds[2]:int_bounds[3], int_bounds[0]:int_bounds[1]]
         
     def add_unit(self, unit_name, tile_number, image):
+        """Create unit dictionary with name, tile number, and image bytes."""
         success, encoded_image = cv2.imencode('.png', image)
         byte_stream = None
         if success:
@@ -169,6 +169,7 @@ class Analyze_Image:
             'image': byte_stream}
         
     def categorize(self) -> list[dict]:
+        """Categorize all detected circles and return unit list."""
         """
         success, encoded_image = cv2.imencode('.png', self.image)
         image_byte_stream = None
@@ -191,22 +192,23 @@ class Analyze_Image:
         #, self.artifact
         
     def save_circles(self):
-        os.makedirs("temp", exist_ok=True)
-        filename = os.path.join("temp", "rectangle.png")
-        cv2.imwrite(filename, self.image)
+        """Save detected circles to temp directory for debugging."""
+        temp_dir = Path("temp")
+        temp_dir.mkdir(exist_ok=True)
+        filename = temp_dir / "rectangle.png"
+        cv2.imwrite(str(filename), self.image)
         
         for dictionary in self.units:
             name = dictionary['name']
             number = dictionary['number']
             image = dictionary['image']
-            filename = os.path.join("temp", "{}_{}.png".format(name, number))
-            cv2.imwrite(filename, image)
+            filename = temp_dir / f"{name}_{number}.png"
+            cv2.imwrite(str(filename), image)
     
     def crop_image(self):
-        # white border
+        """Crop image to remove white border."""
         _, mask = cv2.threshold(self.gray, 240, 255, cv2.THRESH_BINARY)
 
-        # contours
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
@@ -217,10 +219,9 @@ class Analyze_Image:
         return None
     
     def get_circles_pos(self):
-        # blur with 3x3 kernel
+        """Detect circle positions using Hough circle detection."""
         gray_blurred = cv2.blur(self.gray, (3, 3))
 
-        # Hough
         circles = cv2.HoughCircles(
             gray_blurred, cv2.HOUGH_GRADIENT, dp=1, minDist=self.minRadius, 
             param1=220, param2=22, minRadius=self.minRadius, maxRadius=self.minRadius * 2
@@ -231,13 +232,14 @@ class Analyze_Image:
             count = 0
             
             for pt in circles[0, :]:
-                if count >= 10: # limit to 8 units
+                if count >= 10: # limit to 10 units
                     break
                 a, b, r = pt[0], pt[1], pt[2]
                 self.circles_pos.append([a, b, r])
                 count += 1
                 
     def get_mask(self, size):
+        """Create circular mask for template matching."""
         h, w = size
         mask = np.zeros((h, w), dtype=np.uint8)
         center = (w // 2, h // 2)
@@ -246,19 +248,18 @@ class Analyze_Image:
         return mask
                 
     def get_circles(self):
+        """Extract circular regions from detected positions."""
         for a, b, r in self.circles_pos:
             x1, y1 = max(a - r, 0), max(b - r, 0)
             x2, y2 = min(a + r, self.width), min(b + r, self.height)
             
-            # create mask
             mask = np.zeros((2*r, 2*r, 3), dtype=np.uint8)
-            cv2.circle(mask, (r, r), r, (255, 255, 255), -1) # white circle
+            cv2.circle(mask, (r, r), r, (255, 255, 255), -1)
 
-            # extract circle
             cropped_rectangle = self.image[y1:y2, x1:x2]
-            result = np.zeros_like(mask)  # black image
+            result = np.zeros_like(mask)
             result[:cropped_rectangle.shape[0], :cropped_rectangle.shape[1]] = cropped_rectangle
-            cropped_circle = cv2.bitwise_and(result, mask)  # apply circular mask
+            cropped_circle = cv2.bitwise_and(result, mask)
             height, width = cropped_circle.shape[:2]
             size = min(height, width)
             cropped_circle = cropped_circle[:size, :size]
@@ -290,6 +291,7 @@ class Analyze_Image:
     """
     
     def categorize_circle(self, index):
+        """Identify tile position and unit name for a detected circle."""
         a, b, r = self.circles_pos[index]
         x1, y1 = max(a - r, 0), max(b - r, 0)
         x2, y2 = min(a + r, self.width), min(b + r, self.height)

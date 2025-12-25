@@ -1,6 +1,6 @@
 from enum import Enum
 
-from constants import ARTIFACTS, UNITS
+from bot.core.constants import ARTIFACTS, UNITS
 
 
 class Exit_Status(Enum):

@@ -2,16 +2,17 @@ import math
 
 import pygame
 
-from constants import HEX_CATEGORIES, MAPS
-from hex import Hex
-from image_loader import Image_Loader
+from bot.core.constants import FONT_PATH, HEX_CATEGORIES, MAPS
+from bot.image.hex import Hex
+from bot.image.image_loader import Image_Loader
 
-FONT_PATH = "Lato/Lato-Regular.ttf"
 MARGIN = 20
 FONT_SIZE = 20
 
 class Image_Maker:
+    """Generate formation images using pygame."""
     def __init__(self, user_id: int, base_hexes: list[str], settings: dict[str, bool], arena: str, is_private: bool, test_setting, talent: bool=False):
+        """Initialize image maker with user settings and arena configuration."""
         self.loader = Image_Loader()
         self.user_id = user_id
         self.arena = arena
@@ -45,16 +46,19 @@ class Image_Maker:
         
 
     def __enter__(self):
+        """Initialize pygame and create surface."""
         pygame.init()
-        self.font = pygame.font.Font(FONT_PATH, FONT_SIZE)
+        self.font = pygame.font.Font(str(FONT_PATH), FONT_SIZE)
         self.surface = pygame.Surface((self.width, self.height + self.test_setting), pygame.SRCALPHA)
         self.surface.fill((0, 0, 0, 0))
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
+        """Clean up pygame on exit."""
         pygame.quit()
             
     def __draw_yap(self, artifacts):
+        """Draw Yap character if certain artifacts are not present."""
         if 2 not in artifacts and 3 not in artifacts:
             x, y = Hex.hex_to_corner_pixel(3, -3, self.height)
             self.surface.blit(self.loader.yap, (x, y))
@@ -65,6 +69,7 @@ class Image_Maker:
         """
         
     def __draw_talents(self):
+        """Draw talent indicators based on arena and mauler count."""
         q1, r1, q2, r2 = 0, 0, 0, 0
         
         if self.arena == "Ravaged Realm":
@@ -89,21 +94,25 @@ class Image_Maker:
         self.surface.blit(self.loader.tiles["Mythic-Outline"], (x, y))
         
     def __draw_text(self, center_x, center_y, text: str):
+        """Draw text at specified center coordinates."""
         text_surface = self.font.render(text, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=(center_x, center_y))
         self.surface.blit(text_surface, text_rect.topleft)
         
     def __draw_occupied_tile(self, x, y, name: str):
+        """Draw tile with unit/artifact image."""
         self.surface.blit(self.loader.tiles[name], (x, y))
         if not self.show_outline:
             self.surface.blit(self.loader.tiles[self.unit_line], (x, y))
     
     def __draw_blank_tile(self, x, y, blank_fill: str, blank_line: str):
+        """Draw empty tile with fill and outline."""
         if self.show_fill:
             self.surface.blit(self.loader.tiles[blank_fill], (x, y))
         self.surface.blit(self.loader.tiles[blank_line], (x, y))
 
     def __draw_units(self, units: dict[int, str]):
+        """Draw all unit tiles on the formation."""
         self.mauler_count = 0
         for idx, (q,r) in enumerate(self.tiles):
             idx += 1
@@ -125,6 +134,7 @@ class Image_Maker:
             #    self.surface.blit(self.loader.tiles["Gold-Artifact-Hex"], (x, y))
 
     def __draw_artifacts(self, artifacts: dict[int, str]):
+        """Draw artifact tiles on the formation."""
         def_x, def_y = Hex.hex_to_corner_pixel(3, -4, self.height)
         def_cx, def_cy = Hex.hex_to_center_pixel(3, -4, self.height)
 
@@ -172,6 +182,7 @@ class Image_Maker:
                     self.__draw_text(cx, cy, 'A')
         
     def generate_image(self, title, units, artifacts):
+        """Generate complete formation image and save to file."""
         if self.show_title:
             self.__draw_text(self.width / 2, FONT_SIZE + MARGIN, title)
 

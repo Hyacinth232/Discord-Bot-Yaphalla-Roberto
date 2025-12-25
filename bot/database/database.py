@@ -3,14 +3,16 @@ import os
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
-from constants import MONGO_URI
+from bot.core.constants import MONGO_URI
 
 DEFAULT_HEXES = ["Graveborn-Hex", "Generic-Outline", "Lightbearer-Hex", "Artifact-S3-Outline"]
 DEFAULT_MAP = "Arena I"
 DEFAULT_NAME = "Untitled"
 
 class Database:
+    """MongoDB database interface for user formations and image links."""
     def __init__(self):
+        """Initialize MongoDB connection and collections."""
         self.client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
         self.db = self.client['discord_bot_roberto']
         self.users_db = self.db['users']
@@ -22,6 +24,7 @@ class Database:
         self.images_cache = {}
         
     async def increment_counter(self, boss_name: str) -> int:
+        """Increment and return counter for boss name."""
         result = self.counters_db.find_one_and_update(
             {"boss_name": boss_name},
             {"$inc": {"counter": 1}},
@@ -52,6 +55,7 @@ class Database:
         return self.images_cache[key]
         
     def __default_user(self, user_id):
+        """Create default user document structure."""
         return {
             'user_id': user_id,
             'curr_name': DEFAULT_NAME,
@@ -81,15 +85,18 @@ class Database:
         }
         
     def __pull_from_db(self, user_id: int):
+        """Load user document from database into cache."""
         user = self.users_db.find_one({'user_id': user_id})
         self.users_cache[user_id] = user
     
     def __get_user(self, user_id: int):
+        """Get user document from cache or database."""
         if user_id not in self.users_cache:
             self.__pull_from_db(user_id)
         return self.users_cache[user_id]
     
     def __update_user(self, user_id: int, key: str, value: any) -> bool:
+        """Update user document field in database."""
         result = self.users_db.update_one({'user_id': user_id}, {'$set': {key: value}})
         self.__pull_from_db(user_id)
         
@@ -100,12 +107,13 @@ class Database:
         #return result.modified_count > 0
         
     def initialize_user(self, user_id: int):
+        """Initialize user document if it doesn't exist."""
         if user_id not in self.users_cache:
             self.users_db.update_one({'user_id': user_id}, {'$setOnInsert': self.__default_user(user_id)}, upsert=True)
             self.__pull_from_db(user_id)
             
     def add_formation(self, user_id: int, arena: str, units: dict[str, str], artifacts: dict[str, str], name: str) -> bool:
-        """Adds a new formation if it doesn't already exist."""
+        """Add new formation if it doesn't already exist."""
         new_formation = { 'map': arena, 'units': units, 'artifacts': artifacts}
         
         # Add formation if it doesn't already exist
@@ -121,8 +129,7 @@ class Database:
         #return result.modified_count > 0
 
     def update_formation( self, user_id: int, arena: str, units: dict[str, str], artifacts: dict[str, str], name: str) -> bool:
-        """Updates the current formation."""
-        # New values
+        """Update current formation."""
         new_formation = { 'map': arena, 'units': units, 'artifacts': artifacts}
         
         result = self.users_db.update_one(
@@ -159,29 +166,27 @@ class Database:
         #return result.modified_count > 0
 
     def delete_formation(self, user_id: int, name: str) -> bool:
-        """Deletes a formation by name."""
+        """Delete formation by name."""
         user = self.__get_user(user_id)
         formations = user['formations']
         
-        # Cannot delete current formation
         if name == user['curr_name']:
             return False
 
-        # Delete it
         if name in formations:
             del formations[name]
             self.__update_user(user_id, 'formations', formations)
             return True
         
-        # Name not found
         return False
     
     def get_names_list(self, user_id: int) -> list[str]:
+        """Get list of all formation names for user."""
         user = self.__get_user(user_id)
         return [name for name in user['formations']]
 
     def set_curr_formation(self, user_id: int, name: str) -> bool:
-        """Sets the current formation by name."""
+        """Set current formation by name."""
         user = self.__get_user(user_id)
         if name in user['formations']:
             self.__update_user(user_id, 'curr_name', name)
@@ -189,17 +194,18 @@ class Database:
         return False
     
     def get_curr_formation(self, user_id: int) -> bool:
-        """Gets the current formation."""
+        """Get current formation document."""
         user = self.__get_user(user_id)
         curr_name = user['curr_name']
         return user['formations'][curr_name]
     
     def get_curr_name(self, user_id: int) -> dict:
-        """Gets the current formation's name."""
+        """Get current formation name."""
         user = self.__get_user(user_id)
         return user['curr_name']
 
     def update_settings(self, user_id: int, make_transparent: bool=None, show_numbers: bool=None, show_title: bool=None):
+        """Update user display settings."""
         user = self.__get_user(user_id)
         
         new_settings = user['settings']
@@ -213,6 +219,7 @@ class Database:
         self.__update_user(user_id, 'settings', new_settings)
         
     def get_settings(self, user_id: int) ->dict[str, bool]:
+        """Get user display settings."""
         user = self.__get_user(user_id)
         return user['settings']
         
@@ -220,7 +227,7 @@ class Database:
         self, user_id: int,
         unit_fill: str=None, unit_line: str=None,
         arti_fill: str=None, arti_line: str=None):
-        
+        """Update base hex colors for user."""
         user = self.__get_user(user_id)
         
         new_base_hexes = user['base_hexes']
@@ -236,6 +243,7 @@ class Database:
         self.__update_user(user_id, 'base_hexes', new_base_hexes)
     
     def get_base_hexes(self, user_id: int) -> dict[str, str]:
+        """Get base hex colors for user."""
         user = self.__get_user(user_id)
         return list(user['base_hexes'].values())
 

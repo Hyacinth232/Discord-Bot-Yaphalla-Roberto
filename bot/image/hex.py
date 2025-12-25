@@ -2,6 +2,7 @@ import math
 
 
 class Hex:
+    """Hexagonal grid coordinate conversion utilities."""
     hex_to_pixel_map = {}
     HALF_PNG_HEIGHT = 50
     HALF_PNG_WIDTH = HALF_PNG_HEIGHT * 9 / 10
@@ -9,6 +10,7 @@ class Hex:
 
     @staticmethod
     def qr_to_xy(q, r) -> tuple[int, int]:
+        """Convert hex coordinates (q, r) to pixel coordinates (x, y)."""
         #s = -q-r
         y = 3/2 * Hex.HEX_LENGTH * q
         x = math.sqrt(3) * Hex.HEX_LENGTH * (q / 2 + r)
@@ -17,6 +19,7 @@ class Hex:
     
     @staticmethod
     def hex_to_center_pixel(q, r, height):
+        """Get center pixel coordinates for hex at (q, r) position."""
         x, y = 0, 0
         if (q, r) in Hex.hex_to_pixel_map:
             x, y = Hex.hex_to_pixel_map[(q, r)]
@@ -28,5 +31,6 @@ class Hex:
 
     @staticmethod
     def hex_to_corner_pixel(q, r, height):
+        """Get top-left corner pixel coordinates for hex at (q, r) position."""
         x, y = Hex.hex_to_center_pixel(q, r, height)
         return x - Hex.HALF_PNG_WIDTH, y - Hex.HALF_PNG_HEIGHT
