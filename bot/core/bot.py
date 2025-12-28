@@ -5,12 +5,18 @@ import discord
 from discord.ext import commands, tasks
 from PIL import Image
 
+from bot.core.commands_backend import Commands_Backend
 from bot.core.commands_frontend import Commands_Frontend
 from bot.core.constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES,
                                 AMARYLLIS_ID, ARTIFACTS, BOT_TOKEN, DR, FILLS,
                                 IMAGE_KEYS, LINES, MAPS, PL,
                                 PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
                                 UNITS, USAGE, WAITER_ROLE_IDS)
+from bot.database.database import Database
+from bot.database.users import Users
+from bot.services.counter_service import CounterService
+from bot.services.formation_image_service import FormationImageService
+from bot.services.image_service import ImageService
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -18,9 +24,17 @@ intents.messages = True
 intents.message_content = True
 intents.members = True
 
+# Initialize singletons - dependency injection setup
+_db = Database()
+_image_service = ImageService(_db)
+_counter_service = CounterService(_db)
+_users = Users(_db, _image_service)
+_formation_image_service = FormationImageService(_users, _image_service)
+_commands_backend = Commands_Backend(_users, _formation_image_service, _counter_service)
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 bot.remove_command("help")
-commands_frontend = Commands_Frontend(bot)
+commands_frontend = Commands_Frontend(bot, _commands_backend)
 
 @bot.event
 async def on_ready():

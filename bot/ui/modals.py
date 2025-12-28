@@ -31,7 +31,8 @@ class BasicModal(discord.ui.Modal, title="Edit and Submit Formation"):
             forwarder=interaction.user,
             channel_id=self.channel_id,
             orig_msg=self.original_message,
-            content=self.edited_text.value
+            content=self.edited_text.value,
+            counter_service=self.backend.counter_service
             )
         
         formations = await submitter.ctx_submit_message_wrapper()
@@ -117,7 +118,8 @@ class SpreadsheetModal(discord.ui.Modal):
             forwarder=interaction.user,
             channel_id=self.channel_id,
             orig_msg=self.original_message,
-            attachments=self.attachments
+            attachments=self.attachments,
+            counter_service=self.backend.counter_service
             )
         
         submitter.fill_form(

@@ -29,9 +29,9 @@ def get_emojis(names: list[str]) -> str:
 
 class Commands_Frontend:
     """Frontend layer handling Discord interactions and user-facing responses."""
-    def __init__(self, bot: discord.Client):
+    def __init__(self, bot: discord.Client, backend: Commands_Backend = None):
         """Initialize frontend with bot instance and backend."""
-        self.backend = Commands_Backend()
+        self.backend = backend or Commands_Backend()
         self.bot = bot
 
     def infographic(self, value: dict) -> str:
@@ -45,7 +45,7 @@ class Commands_Frontend:
     
     async def get_image_embed(self, interaction: discord.Interaction, key: str, ephemeral=False):
         """Send infographic image link to user."""
-        value = self.backend.users.db.get_image_link(key)
+        value = self.backend.users.get_image_link(key)
         infographic = self.infographic(value)
         await interaction.response.send_message(infographic, ephemeral=ephemeral)
     
@@ -64,9 +64,9 @@ class Commands_Frontend:
         """Update image link in database and send confirmation."""
         timestamp = int(datetime.now(timezone.utc).timestamp())
         text = replace_emojis(text)
-        self.backend.users.db.set_image_link(key, text, timestamp)
+        self.backend.users.set_image_link(key, text, timestamp)
         
-        value = self.backend.users.db.get_image_link(key)
+        value = self.backend.users.get_image_link(key)
         infographic = self.infographic(value)
         await interaction.response.send_message(infographic)
     
@@ -440,7 +440,8 @@ class Commands_Frontend:
             backend=self.backend,
             forwarder=ctx.author,
             channel_id=ctx.channel.id,
-            orig_msg=replied_message)
+            orig_msg=replied_message,
+            counter_service=self.backend.counter_service)
         
         formations = await submitter.get_formation(index)
         files = submitter.formations_to_files(formations)
@@ -468,7 +469,8 @@ class Commands_Frontend:
             backend=self.backend,
             forwarder=interaction.user,
             channel_id=channel_id,
-            orig_msg=message
+            orig_msg=message,
+            counter_service=self.backend.counter_service
             )
         
         formations = await submitter.ctx_submit_message_wrapper()
@@ -556,7 +558,8 @@ class Commands_Frontend:
             backend=self.backend,
             forwarder=ctx.author,
             channel_id=channel_id,
-            orig_msg=replied_message
+            orig_msg=replied_message,
+            counter_service=self.backend.counter_service
             )
         
         formations = await submitter.ctx_submit_message_wrapper()

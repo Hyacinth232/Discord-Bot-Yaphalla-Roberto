@@ -10,17 +10,20 @@ from bot.core.enum_classes import ChannelType
 from bot.core.utils import (to_channel_name, to_channel_type_id, to_priv_id,
                             to_pub_id, to_staff_id)
 from bot.image.analyze_image import Analyze_Image
+from bot.services.counter_service import CounterService
 from bot.submission.google_sheets import add_row
 
 
 class Submit_Collect:
     """Handle formation submission and collection from Discord messages."""
     def __init__(self, bot: discord.Client, backend: Commands_Backend, forwarder: discord.Member, channel_id: int, 
-                orig_msg: discord.Message=None, attachments: list[discord.Attachment]=None, content: str=None):
+                orig_msg: discord.Message=None, attachments: list[discord.Attachment]=None, content: str=None,
+                counter_service: CounterService = None):
         """Initialize submission collector with bot, backend, and message context."""
         self.bot = bot
         self.backend = backend
         self.analyzer = Analyze_Image()
+        self.counter_service = counter_service or CounterService(backend.users.db)
         
         self.forwarder: discord.Member = forwarder
         self.channel_id: int = channel_id
@@ -79,7 +82,7 @@ class Submit_Collect:
         self.author_name = await self.__get_member_name(author_id)
         self.forwarder_name = await self.__get_member_name(forwarder_id)
         
-        self.counter = await self.backend.users.db.increment_counter(to_channel_name(self.channel_id))
+        self.counter = await self.counter_service.increment(to_channel_name(self.channel_id))
         
         try:
             if not self.has_no_msg:

@@ -5,3 +5,5 @@ __pycache__
 .env
 .venv
 WORKING_DOCUMENTATION.md
+ISSUES.md
+config/setup_test.json

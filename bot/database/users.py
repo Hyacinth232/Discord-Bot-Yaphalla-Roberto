@@ -1,13 +1,23 @@
 from bot.core.enum_classes import Tile
 from bot.database.database import Database
+from bot.services.image_service import ImageService
 
 
 class Users:
     """User formation management with transient in-memory state."""
-    def __init__(self):
-        """Initialize Users with database connection."""
-        self.db = Database()
+    def __init__(self, db: Database = None, image_service: ImageService = None):
+        """Initialize Users with database connection and image service."""
+        self.db = db or Database()
         self.transient_users = {}
+        self.image_service = image_service or ImageService(self.db)
+    
+    def get_image_link(self, key: str) -> dict[str, str | None]:
+        """Retrieve image link by key."""
+        return self.image_service.get_image_link(key)
+    
+    def set_image_link(self, key: str, text: str, timestamp: int):
+        """Update or insert image link associated with a key."""
+        self.image_service.set_image_link(key, text, timestamp)
         
     def formation_to_int(self, user_id: int) -> dict[str, dict]:
         """Convert formation keys from string to integer."""
@@ -137,7 +147,7 @@ class Users:
             return name
         return None
     
-    def swap_hexes(self, user_id: str, src: int, dst: int, tile_type: Tile) -> list[str]:
+    def swap_hexes(self, user_id: int, src: int, dst: int, tile_type: Tile) -> list[str]:
         """Swap two units/artifacts at specified indices."""
         names = []
 

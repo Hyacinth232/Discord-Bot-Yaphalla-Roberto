@@ -2,7 +2,8 @@ from bot.core.constants import ARENA_DICT, ARTIFACTS, FILLS, LINES, MAPS, UNITS
 from bot.core.enum_classes import Tile
 from bot.core.utils import get_emoji, split_input, translate_name
 from bot.database.users import Users
-from bot.image.image_maker import Image_Maker
+from bot.services.counter_service import CounterService
+from bot.services.formation_image_service import FormationImageService
 
 
 def valid_index(idx: int) -> bool:
@@ -21,9 +22,11 @@ def validate_arena(arena: str) -> str:
 
 class Commands_Backend:
     """Backend business logic for formation management operations."""
-    def __init__(self):
-        """Initialize backend with Users instance."""
-        self.users = Users()
+    def __init__(self, users: Users = None, image_service: FormationImageService = None, counter_service: CounterService = None):
+        """Initialize backend with Users instance, image service, and counter service."""
+        self.users = users or Users()
+        self.image_service = image_service or FormationImageService(self.users)
+        self.counter_service = counter_service or CounterService(self.users.db)
     
     def __translate_idx(self, user_id: int, idx: str) -> tuple[Tile, int]:
         """Translate index string to tile type and numeric index."""
@@ -36,7 +39,7 @@ class Commands_Backend:
                 idx = int(idx)
                 tile_type = Tile.get_idx_type(idx)
                 return tile_type, idx
-            except:
+            except (ValueError, TypeError):
                 return Tile.OTHER, None
             
         if len(idx) < 3 and idx[0].lower() == "a":
@@ -112,7 +115,7 @@ class Commands_Backend:
     def add_one(self, user_id: int, name: str, idx: int) -> tuple[str, str]:
         """Add one unit/artifact and return updated formation image."""
         self.initialize_user(user_id)
-        name == self.__add_one(user_id, name, idx)
+        name = self.__add_one(user_id, name, idx)
         if name:
             return name, self.show_image(user_id)
         return None, None
@@ -153,23 +156,7 @@ class Commands_Backend:
     
     def show_image(self, user_id: int, is_private=True) -> str:
         """Generate and return formation image filename."""
-        self.initialize_user(user_id)
-        settings = self.users.get_settings(user_id)
-        base_hexes = self.users.get_base_hexes(user_id)
-        
-        arena = self.users.get_map(user_id)
-        name = self.users.get_name(user_id)
-        
-        units = self.users.get_units(user_id)
-        artifacts = self.users.get_artifacts(user_id)
-        
-        talent_obj = self.users.db.get_image_link("talents")
-        talent = "True" == talent_obj.get('text', '')
-        
-        with Image_Maker(user_id, base_hexes, settings, arena, is_private, 3 in artifacts, talent) as img_maker:
-            file_name = img_maker.generate_image(name, units, artifacts)
-        
-        return file_name
+        return self.image_service.generate_formation_image(user_id, is_private)
     
     def name_to_emoji(self, name: str) -> str | None:
         """Convert unit/artifact name to Discord emoji string."""

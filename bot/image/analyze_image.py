@@ -79,7 +79,7 @@ class Analyze_Image:
         """Reset all analysis state."""
         self.image = None
         self.gray = None
-        self.height = 0,
+        self.height = 0
         self.width = 0
         self.diameter = 0
         self.minRadius = 0
