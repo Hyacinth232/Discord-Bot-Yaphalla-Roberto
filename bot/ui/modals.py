@@ -3,6 +3,7 @@ import discord
 from bot.core.commands_backend import Commands_Backend
 from bot.core.enum_classes import ChannelType
 from bot.submission.submit_collect import Submit_Collect
+from bot.ui.views import ReportFormationView
 
 DISCORD_AVATAR_URL = "https://cdn.discordapp.com/embed/avatars/0.png"
 
@@ -37,7 +38,8 @@ class BasicModal(discord.ui.Modal, title="Edit and Submit Formation"):
         
         formations = await submitter.ctx_submit_message_wrapper()
         await submitter.send_images(interaction, formations)
-        await submitter.forward_formation(ChannelType.PRIVATE)
+        report_view = ReportFormationView()
+        await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
         await submitter.forward_formation(ChannelType.STAFF, formations)
     
 
@@ -132,6 +134,7 @@ class SpreadsheetModal(discord.ui.Modal):
         
         formations = await submitter.ctx_submit_message_wrapper()
         msg_or_none: discord.Message = None
+        report_view = ReportFormationView()
         if self.show_public:
             msg_or_none = await submitter.forward_formation(ChannelType.PUBLIC)
             
@@ -139,7 +142,7 @@ class SpreadsheetModal(discord.ui.Modal):
             
         await submitter.send_images(interaction, formations)
         
-        await submitter.forward_formation(ChannelType.PRIVATE, None, url_or_none)
+        await submitter.forward_formation(ChannelType.PRIVATE, formations, url=url_or_none, report_view=report_view)
         msg = await submitter.forward_formation(ChannelType.STAFF, formations, url_or_none)
         
         # Missing check that attachments are actually images

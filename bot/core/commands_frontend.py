@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands
+from numpy.random import f
 
 from bot.core.commands_backend import Commands_Backend
 from bot.core.constants import (AMARYLLIS_ID, CHANNEL_IDS_DICT,
@@ -13,7 +14,7 @@ from bot.core.utils import (clean_input_str, get_emoji, is_kitchen_channel,
                             replace_emojis)
 from bot.submission.submit_collect import Submit_Collect
 from bot.ui.modals import BasicModal, SpreadsheetModal
-from bot.ui.views import DropdownView, YesNoView
+from bot.ui.views import DropdownView, ReportFormationView, YesNoView
 
 #s4 START_DATE = datetime(2025, 5, 23, tzinfo=timezone.utc)
 # s5
@@ -475,7 +476,8 @@ class Commands_Frontend:
         
         formations = await submitter.ctx_submit_message_wrapper()
         await submitter.send_images(interaction, formations)
-        await submitter.forward_formation(ChannelType.PRIVATE)
+        report_view = ReportFormationView()
+        await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
         await submitter.forward_formation(ChannelType.STAFF, formations)
 
     async def context_basic_modal_wrapper(self, interaction: discord.Interaction, message: discord.Message):
@@ -563,7 +565,8 @@ class Commands_Frontend:
             )
         
         formations = await submitter.ctx_submit_message_wrapper()
-        await submitter.forward_formation(ChannelType.PRIVATE)
+        report_view = ReportFormationView()
+        await submitter.forward_formation(ChannelType.PRIVATE, report_view=report_view)
         await submitter.forward_formation(ChannelType.STAFF, formations)
         
     async def add_permissions(self, bot: discord.Client):

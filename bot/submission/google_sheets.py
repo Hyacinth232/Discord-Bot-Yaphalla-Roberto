@@ -29,6 +29,7 @@ async def add_row(
     image_url: str=None
     ):
     """Add a new row to the Google Sheet for the specified boss."""
+    # print(f"Adding row for num_id {num_id} in {boss_name}")
     try:
         sheet_id = SPREADSHEET_IDS[boss_name]
         gc = await agcm.authorize()
@@ -80,6 +81,35 @@ async def add_row(
 
     except Exception as e:
         print(e)
-    
+
+
+async def clear_image_str(num_id: int, boss_name: str):
+    """Clear the image_str and units_str columns for rows matching the given num_id."""
+    # print(f"Clearing image_str and units_str for num_id {num_id} in {boss_name}")
+    try:
+        sheet_id = SPREADSHEET_IDS[boss_name]
+        gc = await agcm.authorize()
+        sh = await gc.open_by_key(sheet_id)
+        ws = await sh.worksheet("Roberto")
+        
+        all_values = await ws.get_all_values()
+        
+        num_id_col = 0
+        units_str_col = 9  # Column J
+        image_str_col = 10  # Column K
+        
+        rows_to_update = []
+        for idx, row in enumerate(all_values, start=1):
+            if idx == 1:
+                continue
+            if len(row) > num_id_col and str(row[num_id_col]) == str(num_id):
+                rows_to_update.append(idx)
+        
+        for row_num in rows_to_update:
+            await ws.update_cell(row_num, units_str_col + 1, "")
+            await ws.update_cell(row_num, image_str_col + 1, "")
+        
+    except Exception as e:
+        print(f"Error clearing image_str and units_str for num_id {num_id} in {boss_name}: {e}")
 
 

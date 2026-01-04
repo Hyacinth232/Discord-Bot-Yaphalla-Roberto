@@ -12,6 +12,8 @@ from bot.core.utils import (to_channel_name, to_channel_type_id, to_priv_id,
 from bot.image.analyze_image import Analyze_Image
 from bot.services.counter_service import CounterService
 from bot.submission.google_sheets import add_row
+from bot.ui.embeds import make_embeds
+from bot.ui.views import ReportFormationView
 
 
 class Submit_Collect:
@@ -37,6 +39,7 @@ class Submit_Collect:
         
         self.has_no_msg = orig_msg is None
         self.url = "No URL" if self.has_no_msg else self.orig_msg.jump_url
+        self.logged_message_links = []
         
         self.author_name = ""
         self.forwarder_name = ""
@@ -127,7 +130,6 @@ class Submit_Collect:
     async def send_form(self, formations: list[tuple], new_url: str=None, image_urls: list[str]=None):
         """Submit form data to Google Sheets."""
         if not self.form:
-            print("Huh")
             return
         
         if self.url != "No URL" or not new_url:
@@ -196,7 +198,7 @@ class Submit_Collect:
             
         elif not self.has_no_msg and self.attach_msg.content:
             text += self.attach_msg.content
-            print(self.attach_msg.content)
+            # print(self.attach_msg.content)
             text += "\n\n"
             
         if self.form:
@@ -211,33 +213,16 @@ class Submit_Collect:
             return
         
         formations = await self.__process_attachments_driver(index)
+        self.logged_message_links = []
         for units, img_bytes in formations:
-            # Don't await
-            create_task(self.__log_formation(units, img_bytes))
+            logged_msg = await self.__log_formation(units, img_bytes)
+            if logged_msg:
+                self.logged_message_links.append(logged_msg.jump_url)
             
         return formations
     
-    def make_embeds(self, text: str, footer: str, files: list[discord.File]=None):
-        """Create Discord embeds for submission message."""
-        main_embed = discord.Embed(
-            url="https://www.yaphalla.com",
-            description=text,
-            colour=0xa996ff,
-            )
-        main_embed.set_footer(text=footer)
-        embeds = [main_embed]
-        
-        if not files:
-            return embeds
-            
-        for file in files:
-            embed = discord.Embed(url="https://www.yaphalla.com", colour=0xa996ff)
-            embed.set_image(url="attachment://{}".format(file.filename))
-            embeds.append(embed)
-                
-        return embeds
     
-    async def forward_formation(self, channel_type: ChannelType, formations: list[tuple]=None, url: str=None) -> discord.Message:
+    async def forward_formation(self, channel_type: ChannelType, formations: list[tuple]=None, url: str=None, report_view: ReportFormationView=None) -> discord.Message:
         """Forward formation submission to appropriate channel."""
         files = []
         
@@ -275,10 +260,10 @@ class Submit_Collect:
         
         footer = "ID: {} | Submitted by: {}".format(self.counter, self.forwarder_name)
         if files:
-            embeds = self.make_embeds(text, footer, files[:10])
-            sent_msg = await channel.send(embeds=embeds, files=files[:10])
+            embeds = make_embeds(text, footer, files[:10], self.logged_message_links)
+            sent_msg = await channel.send(embeds=embeds, files=files[:10], view=report_view)
         else:
-            embeds = self.make_embeds(text, footer)
+            embeds = make_embeds(text, footer, None, self.logged_message_links)
             sent_msg = await channel.send(embeds=embeds)
             
         return sent_msg
@@ -359,8 +344,8 @@ class Submit_Collect:
         if spam_chan:
             await spam_chan.send("Failed to fetch <#{}>".format(channel_id))
     
-    async def __log_formation(self, units: list, img_bytes):
-        """Log formation data to spam channel for debugging."""
+    async def __log_formation(self, units: list, img_bytes) -> discord.Message:
+        """Log formation data to spam channel for debugging. Returns the sent message."""
         spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
         files = []
         if img_bytes:
@@ -378,11 +363,10 @@ class Submit_Collect:
                 files.append(discord.File(fp=dictionary['image'], filename=filename))
 
         if not names:
-            await spam_chan.send("No characters processed", files=files[:10])
-            return
+            return await spam_chan.send("No characters processed", files=files[:10])
         
         text = self.url
-        text += "\n```"
+        text += "\n```\n"
         text += "\n".join(names)
-        text += "```"
-        await spam_chan.send(text, files=files[:10])
+        text += "\n```"
+        return await spam_chan.send(text, files=files[:10])

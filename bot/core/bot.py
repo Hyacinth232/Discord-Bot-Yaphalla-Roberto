@@ -17,6 +17,7 @@ from bot.database.users import Users
 from bot.services.counter_service import CounterService
 from bot.services.formation_image_service import FormationImageService
 from bot.services.image_service import ImageService
+from bot.ui.views import ReportFormationView
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -35,6 +36,11 @@ _commands_backend = Commands_Backend(_users, _formation_image_service, _counter_
 bot = commands.Bot(command_prefix="!", intents=intents)
 bot.remove_command("help")
 commands_frontend = Commands_Frontend(bot, _commands_backend)
+
+@bot.event
+async def setup_hook():
+    """Register persistent views before bot connects."""
+    bot.add_view(ReportFormationView())
 
 @bot.event
 async def on_ready():

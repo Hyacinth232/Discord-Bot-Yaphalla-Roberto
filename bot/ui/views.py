@@ -1,6 +1,12 @@
+import io
+
+import aiohttp
 import discord
 
-from bot.core.constants import AMARYLLIS_ID
+from bot.core.constants import AMARYLLIS_ID, SERVER_ID, SPAM_CHANNEL_ID
+from bot.core.utils import to_channel_name
+from bot.submission.google_sheets import clear_image_str
+from bot.ui.embeds import make_embeds
 
 
 class YesNoView(discord.ui.View):
@@ -64,4 +70,103 @@ class DropdownView(discord.ui.View):
             except discord.NotFound:
                 pass
 
+
+class ReportFormationView(discord.ui.View):
+    """Persistent view with button to report incorrect formation identification."""
+    def __init__(self):
+        """Initialize persistent view with no timeout."""
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(
+        label='Report Incorrect Image Recognition',
+        style=discord.ButtonStyle.red,
+        custom_id='roberto:report_formation'
+    )
+    async def report_formation(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Handle report button click."""
+        await interaction.response.defer(ephemeral=True)
+        
+        message = interaction.message
+        if not message:
+            await interaction.followup.send("Unable to find the submission message.", ephemeral=True)
+            return
+        
+        bot = interaction.client
+        
+        try:
+            guild = bot.get_guild(SERVER_ID)
+            if not guild:
+                guild = await bot.fetch_guild(SERVER_ID)
+            
+            spam_channel = guild.get_channel(SPAM_CHANNEL_ID)
+            if not spam_channel:
+                spam_channel = await guild.fetch_channel(SPAM_CHANNEL_ID)
+            
+            report_text = "**Formation Misidentification Report**\n"
+            report_text += f"**Reported by:** {interaction.user.mention}\n"
+            report_text += f"**Submission Message:** {message.jump_url}\n"
+            
+            submission_id = None
+            if message.embeds:
+                for embed in message.embeds:
+                    if embed.footer and embed.footer.text:
+                        if "ID:" in embed.footer.text:
+                            submission_id = embed.footer.text.split('ID:')[1].split('|')[0].strip()
+                            report_text += f"**Submission ID:** {submission_id}\n"
+            
+            report_text += f"<@{AMARYLLIS_ID}>"
+            await spam_channel.send(report_text)
+            
+            if submission_id:
+                try:
+                    boss_name = to_channel_name(message.channel.id)
+                    if boss_name:
+                        await clear_image_str(int(submission_id), boss_name)
+                except Exception as e:
+                    print(f"Error clearing image_str from spreadsheet: {e}")
+            
+            text = message.embeds[0].description
+            footer = message.embeds[0].footer.text
+            
+            filtered_files = []
+            for embed in message.embeds:
+                if embed.image and embed.image.url:
+                    if 'formation_' not in embed.image.url:
+                        if embed.image.proxy_url:
+                            try:
+                                async with aiohttp.ClientSession() as session:
+                                    async with session.get(embed.image.proxy_url) as resp:
+                                        if resp.status == 200:
+                                            image_data = await resp.read()
+                                            if embed.image.url.startswith('attachment://'):
+                                                filename = embed.image.url.replace('attachment://', '')
+                                            else:
+                                                filename = embed.image.proxy_url.split('/')[-1].split('?')[0] or f"image_{len(filtered_files)}.png"
+                                            filtered_files.append(discord.File(io.BytesIO(image_data), filename=filename))
+                            except Exception as e:
+                                print(f"Failed to download image from embed: {e}")
+            
+            try:
+                channel = message.channel
+                await message.delete()
+                embeds = make_embeds(text, footer, filtered_files)
+                await channel.send(embeds=embeds, files=filtered_files)
+            except Exception as e:
+                print(e)
+            
+            await interaction.followup.send(
+                "Thank you for reporting! The formation has been flagged for review and removed from the submission.",
+                ephemeral=True
+            )
+            
+        except Exception as e:
+            ping_text = ""
+            if submission_id:
+                ping_text += f"submission #{submission_id} "
+            ping_text += f"<@{AMARYLLIS_ID}>"
+                
+            await interaction.followup.send(
+                "An error occurred while reporting " + ping_text,
+                ephemeral=False
+            )
 
