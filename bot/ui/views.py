@@ -142,7 +142,7 @@ class ReportFormationView(discord.ui.View):
     """
     
     @discord.ui.button(
-        label='Request Correction',
+        label='Report Image Misidentification',
         style=discord.ButtonStyle.red,
         custom_id='roberto:report_formation'
     )
@@ -187,7 +187,8 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
                         report_text += f"**Submission ID:** {submission_id}\n"
         
         report_text += f"<@{AMARYLLIS_ID}>"
-        await spam_channel.send(report_text)
+        msg = await spam_channel.send(f"<@{AMARYLLIS_ID}>")
+        await msg.edit(content=report_text)
         
         if submission_id:
             try:
