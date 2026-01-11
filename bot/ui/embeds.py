@@ -11,16 +11,18 @@ def make_embeds(text: str, footer: str, files: list[discord.File] = None, logged
         description=text,
         colour=0xa996ff,
     )
+    if files:
+        main_embed.set_image(url="attachment://{}".format(files[0].filename))
+    
     main_embed.set_footer(text=footer)
     embeds = [main_embed]
     
-    if not files:
+    if not files or len(files) == 1:
         return embeds
-        
-    for file in files:
+    
+    for file in files[1:]:
         embed = discord.Embed(url="https://www.yaphalla.com", colour=0xa996ff)
         embed.set_image(url="attachment://{}".format(file.filename))
         embeds.append(embed)
-            
     return embeds
 

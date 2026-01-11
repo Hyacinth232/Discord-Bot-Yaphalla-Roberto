@@ -372,9 +372,9 @@ class Submit_Collect:
         text = self.url
         
         if boss_name:
-            text += "\nBoss: {}\n".format(boss_name)
+            text += "\nBoss: {}".format(boss_name)
         if counter:
-            text += "\nID: {}\n".format(counter)
+            text += "\nID: {}".format(counter)
             
         text += "\n```.\n"
         text += "\n".join(names)
