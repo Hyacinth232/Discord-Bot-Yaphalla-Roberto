@@ -566,7 +566,7 @@ class Commands_Frontend:
         
         formations = await submitter.ctx_submit_message_wrapper()
         report_view = ReportFormationView()
-        await submitter.forward_formation(ChannelType.PRIVATE, report_view=report_view)
+        await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
         await submitter.forward_formation(ChannelType.STAFF, formations)
         
     async def add_permissions(self, bot: discord.Client):

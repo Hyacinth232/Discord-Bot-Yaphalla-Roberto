@@ -85,7 +85,8 @@ class Submit_Collect:
         self.author_name = await self.__get_member_name(author_id)
         self.forwarder_name = await self.__get_member_name(forwarder_id)
         
-        self.counter = await self.counter_service.increment(to_channel_name(self.channel_id))
+        boss_name = to_channel_name(self.channel_id)
+        self.counter = await self.counter_service.increment(boss_name)
         
         try:
             if not self.has_no_msg:
@@ -93,7 +94,7 @@ class Submit_Collect:
         except Exception:
             pass
         
-        return await self.get_formation()
+        return await self.get_formation(boss_name=boss_name, counter=self.counter)
         
         #tasks = [self.__forward_formation(), self.__forward_formation(bytes_list)]
         #await gather(*tasks)
@@ -207,7 +208,7 @@ class Submit_Collect:
             text += "\n-# Submitted by: {}".format(self.forwarder_name)
         return text
     
-    async def get_formation(self, index=-1) -> list[tuple]:
+    async def get_formation(self, index=-1, boss_name: str=None, counter: int=None) -> list[tuple]:
         """Extract formation data from attachments."""
         if not self.attachments:
             return
@@ -215,7 +216,7 @@ class Submit_Collect:
         formations = await self.__process_attachments_driver(index)
         self.logged_message_links = []
         for units, img_bytes in formations:
-            logged_msg = await self.__log_formation(units, img_bytes)
+            logged_msg = await self.__log_formation(units, img_bytes, boss_name, counter)
             if logged_msg:
                 self.logged_message_links.append(logged_msg.jump_url)
             
@@ -261,7 +262,10 @@ class Submit_Collect:
         footer = "ID: {} | Submitted by: {}".format(self.counter, self.forwarder_name)
         if files:
             embeds = make_embeds(text, footer, files[:10], self.logged_message_links)
-            sent_msg = await channel.send(embeds=embeds, files=files[:10], view=report_view)
+            if formations:
+                sent_msg = await channel.send(embeds=embeds, files=files[:10], view=report_view)
+            else:
+                sent_msg = await channel.send(embeds=embeds, files=files[:10])
         else:
             embeds = make_embeds(text, footer, None, self.logged_message_links)
             sent_msg = await channel.send(embeds=embeds)
@@ -344,7 +348,7 @@ class Submit_Collect:
         if spam_chan:
             await spam_chan.send("Failed to fetch <#{}>".format(channel_id))
     
-    async def __log_formation(self, units: list, img_bytes) -> discord.Message:
+    async def __log_formation(self, units: list, img_bytes, boss_name: str, counter: int) -> discord.Message:
         """Log formation data to spam channel for debugging. Returns the sent message."""
         spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
         files = []
@@ -366,7 +370,13 @@ class Submit_Collect:
             return await spam_chan.send("No characters processed", files=files[:10])
         
         text = self.url
-        text += "\n```\n"
+        
+        if boss_name:
+            text += "\nBoss: {}\n".format(boss_name)
+        if counter:
+            text += "\nID: {}\n".format(counter)
+            
+        text += "\n```.\n"
         text += "\n".join(names)
-        text += "\n```"
+        text += "\n.```"
         return await spam_chan.send(text, files=files[:10])
