@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 
 from bot.core.constants import (ALIAS_DICT, EMOJIS, PRIVATE_CHANNEL_IDS,
                                 PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR_BOSSES,
@@ -105,3 +106,10 @@ def clean_input_str(text: str) -> str:
     text = re.sub(r'[^a-zA-Z0-9 ?!\'\-\(\):,]', '', text)
     #text = text.title()
     return text
+
+def discord_timestamp(dt: datetime) -> str:
+    unix_timestamp = int(dt.timestamp())
+    return "<t:{}:f>".format(unix_timestamp)
+
+def datetime_now() -> datetime:
+    return datetime.now(timezone.utc)

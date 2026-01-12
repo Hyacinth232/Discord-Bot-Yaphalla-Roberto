@@ -1,5 +1,6 @@
 import io
 import os
+from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -12,8 +13,10 @@ from bot.core.constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES,
                                 IMAGE_KEYS, LINES, MAPS, PL,
                                 PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
                                 UNITS, USAGE, WAITER_ROLE_IDS)
+from bot.core.utils import datetime_now, discord_timestamp
 from bot.database.database import Database
 from bot.database.users import Users
+from bot.image.webp_converter import WebpConverter
 from bot.services.counter_service import CounterService
 from bot.services.formation_image_service import FormationImageService
 from bot.services.image_service import ImageService
@@ -134,14 +137,15 @@ async def emoji(interaction: discord.Interaction, name: str, show_public: bool=F
 @bot.tree.command(name="emojify")
 async def charms(interaction: discord.Interaction, text: str):
     await commands_frontend.emojify_wrapper(interaction, text)
-    
+            
 @bot.tree.command(name="get_timestamp", description="Convert a date/time to a UTC Discord timestamp")
 async def get_timestamp(interaction: discord.Interaction, month: int, day: int, year: int=2025, hour: int=0):
-    await commands_frontend.get_timestamp(interaction, year, month, day, hour)
+    dt = datetime(year, month, day, hour, 0, 0, tzinfo=timezone.utc)
+    await interaction.response.send_message(discord_timestamp(dt))
 
 @bot.tree.command(name="time_now")
 async def time_now(interaction: discord.Interaction):
-    await commands_frontend.time_now_wrapper(interaction)
+    await interaction.response.send_message(discord_timestamp(datetime_now()))
     
 ##############
 ### GUIDES ###
@@ -477,21 +481,28 @@ async def to_lwebp(ctx: commands.Context):
 
 async def webp_helper(ctx: commands.Context, user_quality: int, lossless: bool=False):
     replied_message = await ctx.channel.fetch_message(ctx.message.reference.message_id)
+    
+    if replied_message.flags.forwarded:
+        replied_message = replied_message.message_snapshots[0]
+    
     if replied_message.attachments:
         attachment = replied_message.attachments[0]
         
         if attachment.content_type and 'image' in attachment.content_type and attachment.filename.lower().endswith(".png"):
             image_bytes = await attachment.read()
             
-            with Image.open(io.BytesIO(image_bytes)).convert("RGBA") as img:
-                output_buffer = io.BytesIO()
-
-                filename, _ = os.path.splitext(attachment.filename)
-                
-                img.save(output_buffer, format="WEBP", lossless=lossless, quality=user_quality)
-                output_buffer.seek(0)
-                
-                await ctx.channel.send(file=discord.File(fp=output_buffer, filename=filename + ".webp"))
+            output_buffer, output_filename = WebpConverter.convert_to_webp(
+                image_bytes, attachment.filename, user_quality, lossless
+            )
+            
+            text = discord_timestamp(datetime_now())
+            file = discord.File(fp=output_buffer, filename=output_filename)
+            
+            sent_message = await ctx.channel.send(text, file=file)
+            
+            if sent_message.attachments:
+                attachment_url = sent_message.attachments[0].url
+                await ctx.channel.send("`" + attachment_url + "`")
 
 @bot.command(name="submit")
 async def submit_formation(ctx: commands.Context):

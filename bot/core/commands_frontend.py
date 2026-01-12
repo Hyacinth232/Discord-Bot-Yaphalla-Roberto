@@ -3,15 +3,13 @@ from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands
-from numpy.random import f
 
 from bot.core.commands_backend import Commands_Backend
-from bot.core.constants import (AMARYLLIS_ID, CHANNEL_IDS_DICT,
-                                PRIVATE_CHANNEL_IDS, PUBLIC_CHANNEL_IDS,
-                                ROBERTO_TEXT, SERVER_ID, shared_config)
+from bot.core.constants import (AMARYLLIS_ID, PRIVATE_CHANNEL_IDS,
+                                PUBLIC_CHANNEL_IDS, SERVER_ID, shared_config)
 from bot.core.enum_classes import TRANSLATE, ChannelType, Language
-from bot.core.utils import (clean_input_str, get_emoji, is_kitchen_channel,
-                            replace_emojis)
+from bot.core.utils import (clean_input_str, datetime_now, discord_timestamp,
+                            get_emoji, is_kitchen_channel, replace_emojis)
 from bot.submission.submit_collect import Submit_Collect
 from bot.ui.modals import BasicModal, SpreadsheetModal
 from bot.ui.views import DropdownView, ReportFormationView, YesNoView
@@ -63,7 +61,7 @@ class Commands_Frontend:
             
     async def set_image_link(self, interaction: discord.Interaction, key: str, text: str):
         """Update image link in database and send confirmation."""
-        timestamp = int(datetime.now(timezone.utc).timestamp())
+        timestamp = int(datetime_now().timestamp())
         text = replace_emojis(text)
         self.backend.users.set_image_link(key, text, timestamp)
         
@@ -410,24 +408,6 @@ class Commands_Frontend:
         view = DropdownView(shared_config[game_mode], 'Select a Boss...', self.get_image_embed)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
         view.message = await interaction.original_response()
-    
-    async def get_timestamp(self, interaction: discord.Interaction, year: int, month: int, day: int, hour: int):
-        """Generate Discord timestamp from date/time."""
-        try:
-            dt = datetime(year, month, day, hour, 0, 0, tzinfo=timezone.utc)
-            unix_timestamp = int(dt.timestamp())
-            await interaction.response.send_message("<t:{}:F>".format(unix_timestamp))
-        except ValueError:
-            await self.error_message(interaction)
-    
-    async def time_now_wrapper(self, interaction: discord.Interaction):
-        """Get current time as Discord timestamp."""
-        try:
-            dt = datetime.now(timezone.utc)
-            unix_timestamp = int(dt.timestamp())
-            await interaction.response.send_message("<t:{}:f>".format(unix_timestamp))
-        except ValueError:
-            await self.error_message(interaction)
             
     async def collect_wrapper(self, ctx: commands.Context, index: int):
         """Collect formation from replied message."""
@@ -596,7 +576,7 @@ class Commands_Frontend:
             print("Server not found.")
             return
 
-        elapsed_days = (datetime.now(timezone.utc) - START_DATE).days
+        elapsed_days = (datetime_now() - START_DATE).days
         
         count = len(shared_config[game_mode])
         today_boss = shared_config[game_mode][elapsed_days % count]
