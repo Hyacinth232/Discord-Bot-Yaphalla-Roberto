@@ -502,7 +502,7 @@ async def webp_helper(ctx: commands.Context, user_quality: int, lossless: bool=F
             
             if sent_message.attachments:
                 attachment_url = sent_message.attachments[0].url
-                await ctx.channel.send("`" + attachment_url + "`")
+                await sent_message.edit(content="```" + text + "\n" + attachment_url + "```")
 
 @bot.command(name="submit")
 async def submit_formation(ctx: commands.Context):
