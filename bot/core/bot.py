@@ -537,7 +537,7 @@ async def toggle_manage_channels(ctx: commands.Context):
         
         perms.update(manage_channels=new_state)
         perms.update(mention_everyone=new_state2)
-        perms.update(mention_everyone=new_state3)
+        perms.update(manage_guild=new_state3)
         
         await mod_role.edit(permissions=perms)
         await owner.send("Manage Channels perm for {} has been set to {}.".format(mod_role.name, new_state))
