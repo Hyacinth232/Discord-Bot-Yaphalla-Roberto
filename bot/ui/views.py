@@ -1,13 +1,12 @@
-import io
-
-import aiohttp
 import discord
 
 from bot.core.constants import (AMARYLLIS_ID, SERVER_ID, SPAM_CHANNEL_ID,
                                 WAITER_ROLE_IDS)
-from bot.core.utils import to_channel_name
+from bot.core.utils import (get_or_fetch_channel, get_or_fetch_guild,
+                            to_channel_name)
 from bot.submission.google_sheets import clear_image_str
-from bot.ui.embeds import make_embeds
+from bot.ui.embeds import (download_embed_images, get_embed_image_urls,
+                           make_embeds)
 
 
 class YesNoView(discord.ui.View):
@@ -166,58 +165,39 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
     bot = interaction.client
     
     try:
-        guild = bot.get_guild(SERVER_ID)
-        if not guild:
-            guild = await bot.fetch_guild(SERVER_ID)
+        guild = await get_or_fetch_guild(bot, SERVER_ID)
+        spam_channel = await get_or_fetch_channel(guild, SPAM_CHANNEL_ID)
         
-        spam_channel = guild.get_channel(SPAM_CHANNEL_ID)
-        if not spam_channel:
-            spam_channel = await guild.fetch_channel(SPAM_CHANNEL_ID)
-        
-        report_text = "**Formation Misidentification Report**\n"
-        report_text += f"**Reported by:** {interaction.user.mention}\n"
-        report_text += f"**Submission Message:** {message.jump_url}\n"
+        report_text = (
+            f"<@{AMARYLLIS_ID}>"
+            f"**Formation Misidentification Report**\n"
+            f"**Reported by:** {interaction.user.mention}\n"
+            f"**Submission Message:** {message.jump_url}\n"
+        )
         
         submission_id = None
         if message.embeds:
             for embed in message.embeds:
-                if embed.footer and embed.footer.text:
-                    if "ID:" in embed.footer.text:
-                        submission_id = embed.footer.text.split('ID:')[1].split('|')[0].strip()
-                        report_text += f"**Submission ID:** {submission_id}\n"
-        
-        report_text += f"<@{AMARYLLIS_ID}>"
+                if embed.footer and embed.footer.text and "ID:" in embed.footer.text:
+                    submission_id = embed.footer.text.split('ID:')[1].split('|')[0].strip()
+                    report_text += f"**Submission ID:** {submission_id}\n"
+
         msg = await spam_channel.send(f"<@{AMARYLLIS_ID}>")
         await msg.edit(content=report_text)
         
-        if submission_id:
-            try:
-                boss_name = to_channel_name(message.channel.id)
-                if boss_name:
-                    await clear_image_str(int(submission_id), boss_name)
-            except Exception as e:
-                print(f"Error clearing image_str from spreadsheet: {e}")
+        try:
+            boss_name = to_channel_name(message.channel.id)
+            if boss_name:
+                await clear_image_str(int(submission_id), boss_name)
+        except Exception as e:
+            print(f"Error clearing image_str from spreadsheet: {e}")
         
         text = message.embeds[0].description
         footer = message.embeds[0].footer.text
         
-        filtered_files = []
-        for embed in message.embeds:
-            if embed.image and embed.image.url:
-                if 'formation_' not in embed.image.url:
-                    if embed.image.proxy_url:
-                        try:
-                            async with aiohttp.ClientSession() as session:
-                                async with session.get(embed.image.proxy_url) as resp:
-                                    if resp.status == 200:
-                                        image_data = await resp.read()
-                                        if embed.image.url.startswith('attachment://'):
-                                            filename = embed.image.url.replace('attachment://', '')
-                                        else:
-                                            filename = embed.image.proxy_url.split('/')[-1].split('?')[0] or f"image_{len(filtered_files)}.png"
-                                        filtered_files.append(discord.File(io.BytesIO(image_data), filename=filename))
-                        except Exception as e:
-                            print(f"Failed to download image from embed: {e}")
+        image_urls = get_embed_image_urls(message.embeds)
+        formation_files, non_formation_files = await download_embed_images(image_urls)
+        filtered_files = non_formation_files
         
         try:
             channel = message.channel

@@ -3,15 +3,12 @@
     "thread_id": 1332878709870301287,
     "public_channel_ids": {
         "Test": 1332875766194638898,
-        "Nocturne Judicator S4": 1332876517256069200
+        "AFK": 1332876430371192833
     },
     "private_channel_ids": {
         "Test": 1332875812222930944,
-        "Nocturne Judicator S4": 1332876430371192833
-    },
-    "staff_channel_ids": {
-        "Test": 1332875747416870974,
-        "Nocturne Judicator S4": 1332876459592781884
+        "Normal": 1332876459592781884,
+        "Phantimal": 1332876517256069200
     }
 }
 

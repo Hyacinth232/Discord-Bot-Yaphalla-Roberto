@@ -71,10 +71,10 @@ SERVER_ID = env_config["server_id"]
 SPAM_CHANNEL_ID = env_config["thread_id"]
 PUBLIC_CHANNEL_IDS = env_config["public_channel_ids"]
 PRIVATE_CHANNEL_IDS = env_config["private_channel_ids"]
-STAFF_CHANNEL_IDS = env_config["staff_channel_ids"]
 
 # Shared configuration (same for both environments)
 WAITER_ROLE_IDS = shared_config["waiter_role_ids"]
+STAGE_ROLE_IDS = shared_config["stage_role_ids"]
 ADMIN_MOD_ROLE_IDS = shared_config["admin_mod_role_ids"]
 CHEF_ROLE_ID = shared_config["chef_role_id"]
 AMARYLLIS_ID = shared_config["dahlia_id"]
@@ -86,8 +86,6 @@ IMAGE_KEYS.extend(shared_config[RR])
 
 ROBERTO_ID = 1332595381095366656
 SPREADSHEET_IDS = shared_config["spreadsheet_ids"]
-CHANNEL_IDS_DICT = {pub_id : PRIVATE_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
-STAFF_CHANNEL_IDS_DICT = {pub_id : STAFF_CHANNEL_IDS[name] for name, pub_id in PUBLIC_CHANNEL_IDS.items()}
 
 ### HEX_CATEGORIES
 UNITS = [hex_name for lst in HEX_CATEGORIES['Units'].values() for hex_name in lst]

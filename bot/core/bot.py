@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands, tasks
-from PIL import Image
 
 from bot.core.commands_backend import Commands_Backend
 from bot.core.commands_frontend import Commands_Frontend
@@ -12,7 +11,8 @@ from bot.core.constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES,
                                 AMARYLLIS_ID, ARTIFACTS, BOT_TOKEN, DR, FILLS,
                                 IMAGE_KEYS, LINES, MAPS, PL,
                                 PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
-                                UNITS, USAGE, WAITER_ROLE_IDS)
+                                STAGE_ROLE_IDS, UNITS, USAGE, WAITER_ROLE_IDS)
+from bot.core.enum_classes import BossType
 from bot.core.utils import datetime_now, discord_timestamp
 from bot.database.database import Database
 from bot.database.users import Users
@@ -103,8 +103,12 @@ async def channels_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for channel names."""
     return [discord.app_commands.Choice(name=name, value=name) for name in channel_names_plus_default
             if name.lower().startswith(current.lower())][:25]
-    
-image_keys = [discord.app_commands.Choice(name=key, value=key) for key in IMAGE_KEYS]
+
+async def image_keys_autocomplete(interaction: discord.Interaction, current: str):
+    """Autocomplete for image keys."""
+    return [discord.app_commands.Choice(name=key, value=key) for key in IMAGE_KEYS
+            if key.lower().startswith(current.lower())][:25]
+
 unit_indices = [discord.app_commands.Choice(name=str(idx), value=idx) for idx in range(1, 15)]
 artifact_indices = [discord.app_commands.Choice(name='A{}'.format(idx), value=-idx) for idx in range(1, 4)]
 
@@ -169,6 +173,15 @@ def is_waiter(interaction: discord.Interaction) -> bool:
         return True
     return any(role.id in WAITER_ROLE_IDS for role in interaction.user.roles)
 
+def is_stage_role(interaction: discord.Interaction) -> bool:
+    if interaction.guild is None or interaction.guild.id != SERVER_ID:
+        return False
+    if interaction.user.guild_permissions.administrator:
+        return True
+    if interaction.user.id == AMARYLLIS_ID:
+        return True
+    return any(role.id in STAGE_ROLE_IDS for role in interaction.user.roles)
+
 @bot.tree.command(name="benchmark")
 @discord.app_commands.check(is_waiter)
 async def benchmark_pls(interaction: discord.Interaction):
@@ -197,9 +210,12 @@ async def souschef(ctx: commands.Context):
     
 @bot.tree.command(name="yap_update_image")
 @discord.app_commands.check(is_waiter)
-@discord.app_commands.choices(key=image_keys)
-async def yap_update_image(interaction: discord.Interaction, key: discord.app_commands.Choice[str], text: str):
-    await commands_frontend.set_image_link(interaction, key.name, text)
+@discord.app_commands.autocomplete(key=image_keys_autocomplete)
+async def yap_update_image(interaction: discord.Interaction, key: str, text: str):
+    if key not in IMAGE_KEYS:
+        await interaction.response.send_message("Invalid image key.", ephemeral=True)
+        return
+    await commands_frontend.set_image_link(interaction, key, text)
 
 @yap_update_image.error
 async def admin_update_image_error(interaction: discord.Interaction, error):
@@ -464,6 +480,31 @@ async def submit_form(
     ):
     attachments = [file1, file2, file3, file4, file5]
     await commands_frontend.command_form_modal_wrapper(interaction, attachments)
+
+@bot.tree.command(name="submit_normal", description="Submit a stage to normal")
+async def submit_stage_normal(
+    interaction: discord.Interaction,
+    file1: discord.Attachment=None,
+    file2: discord.Attachment=None,
+    file3: discord.Attachment=None,
+    file4: discord.Attachment=None,
+    file5: discord.Attachment=None
+    ):
+    attachments = [file1, file2, file3, file4, file5]
+    await commands_frontend.stage_submission_modal_wrapper(interaction, attachments, BossType.NORMAL)
+    
+
+@bot.tree.command(name="submit_phantimal", description="Submit a stage to phantimal")
+async def submit_stage_phantimal(
+    interaction: discord.Interaction,
+    file1: discord.Attachment=None,
+    file2: discord.Attachment=None,
+    file3: discord.Attachment=None,
+    file4: discord.Attachment=None,
+    file5: discord.Attachment=None
+    ):
+    attachments = [file1, file2, file3, file4, file5]
+    await commands_frontend.stage_submission_modal_wrapper(interaction, attachments, BossType.PHANTIMAL)
     
 @bot.command(name="webp")
 async def to_webp(ctx: commands.Context, user_quality: int = 80):
@@ -506,7 +547,15 @@ async def webp_helper(ctx: commands.Context, user_quality: int, lossless: bool=F
 
 @bot.command(name="submit")
 async def submit_formation(ctx: commands.Context):
-    await commands_frontend.submit_wrapper(ctx)
+    await commands_frontend.submit_wrapper(ctx, boss_type=BossType.DREAM_REALM)
+    
+@bot.command(name="subn")
+async def submit_formation_normal(ctx: commands.Context):
+    await commands_frontend.submit_wrapper(ctx, boss_type=BossType.NORMAL)
+    
+@bot.command(name="subp")
+async def submit_formation_phantimal(ctx: commands.Context):
+    await commands_frontend.submit_wrapper(ctx, boss_type=BossType.PHANTIMAL)
     
 @bot.command(name="collect")
 async def collect(ctx: commands.Context, index: int=-1):
@@ -533,15 +582,14 @@ async def toggle_manage_channels(ctx: commands.Context):
         perms = mod_role.permissions
         new_state = not perms.manage_channels
         new_state2 = not perms.mention_everyone
-        new_state3 = not perms.administrator
+        new_state3 = not perms.manage_guild
         
         perms.update(manage_channels=new_state)
         perms.update(mention_everyone=new_state2)
-        perms.update(manage_guild=False)
-        perms.update(administrator=new_state3)
+        perms.update(manage_guild=new_state3)
         
         await mod_role.edit(permissions=perms)
-        await owner.send("Manage Channels perm for {} has been set to {}.".format(mod_role.name, new_state))
+        await owner.send("Perm for {} has been set to {}.".format(mod_role.name, new_state))
         
     except discord.Forbidden:
         await owner.send("No permission to toggle")

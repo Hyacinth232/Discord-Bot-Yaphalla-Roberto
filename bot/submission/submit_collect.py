@@ -6,9 +6,10 @@ import discord
 
 from bot.core.commands_backend import Commands_Backend
 from bot.core.constants import SERVER_ID, SPAM_CHANNEL_ID
-from bot.core.enum_classes import ChannelType
-from bot.core.utils import (to_channel_name, to_channel_type_id, to_priv_id,
-                            to_pub_id, to_staff_id)
+from bot.core.enum_classes import BossType, ChannelType
+from bot.core.utils import (get_or_fetch_channel, get_or_fetch_guild,
+                            get_or_fetch_member, to_bot_id, to_channel_name,
+                            to_channel_type_id)
 from bot.image.analyze_image import Analyze_Image
 from bot.services.counter_service import CounterService
 from bot.submission.google_sheets import add_row
@@ -20,7 +21,7 @@ class Submit_Collect:
     """Handle formation submission and collection from Discord messages."""
     def __init__(self, bot: discord.Client, backend: Commands_Backend, forwarder: discord.Member, channel_id: int, 
                 orig_msg: discord.Message=None, attachments: list[discord.Attachment]=None, content: str=None,
-                counter_service: CounterService = None):
+                counter_service: CounterService = None, boss_type: BossType=BossType.DREAM_REALM):
         """Initialize submission collector with bot, backend, and message context."""
         self.bot = bot
         self.backend = backend
@@ -29,10 +30,13 @@ class Submit_Collect:
         
         self.forwarder: discord.Member = forwarder
         self.channel_id: int = channel_id
-        self.bot_id: int = to_pub_id(channel_id)
+        self.bot_id: int = to_bot_id(channel_id, boss_type)
+        
+        self.boss_type = boss_type
         
         self.content = content
         self.form = False
+        self.stage_form = False
         
         self.attachments: list[discord.Attachment] = attachments
         self.orig_msg: discord.Message = orig_msg
@@ -43,6 +47,7 @@ class Submit_Collect:
         
         self.author_name = ""
         self.forwarder_name = ""
+        self.title = "Submission"
         
         if not self.has_no_msg:
             self.is_forwarded: bool = orig_msg.flags.forwarded
@@ -52,27 +57,31 @@ class Submit_Collect:
         self.attachments = [attachment for attachment in self.attachments 
                             if attachment.content_type and 'image' in attachment.content_type]
         
-    def fill_form(self, resonance: str, ascension: str, credit_name: str, damage: str, notes: str):
+    def fill_form(self, title: str, resonance: str, ascension: str, credit_name: str, damage: str, notes: str):
         """Fill form data for spreadsheet submission."""
         self.form = True
+        self.title = title
         self.resonance = resonance
         self.ascension = ascension
         self.credit_name = credit_name
         self.damage = damage
         self.notes = notes
         
+    def fill_stage_form(self, title: str, charms_gear: str, timings: str, replays: str, notes: str):
+        """Fill form data for stage submission."""
+        self.stage_form = True
+        self.title = title
+        self.charms_gear = charms_gear
+        self.timings = timings
+        self.replays = replays
+        self.notes = notes
+        
     async def __get_member_name(self, member_id):
         """Get display name for member by ID."""
         try:
-            guild = self.bot.get_guild(SERVER_ID)
-            if not guild:
-                guild = await self.bot.fetch_guild(SERVER_ID)
-            
-            member = guild.get_member(member_id)
-            if not member:
-                member = await guild.fetch_member(member_id)
-                
-            return member.display_name
+            guild = await get_or_fetch_guild(self.bot, SERVER_ID)
+            member = await get_or_fetch_member(guild, member_id)
+            return member.display_name if member else ""
         except Exception as e:
             print(e)
         return ""
@@ -168,9 +177,7 @@ class Submit_Collect:
         
     async def __get_text(self, channel_type: ChannelType, new_url: str=None) -> str:
         """Generate formatted text for submission message."""
-        text = "## Submission\n"
-        if channel_type == ChannelType.STAFF:
-            text += "**ID:** {}\n".format(self.counter)
+        text = "## {}\n".format(self.title)
         
         if self.url != "No URL":
             text += "**Link:** {}\n".format(self.url)
@@ -186,6 +193,12 @@ class Submit_Collect:
             text += "**Damage:** {}\n".format(self.damage)
             text += "**Ascension:** {}\n".format(self.ascension)
             text += "**Resonance** {}\n".format(self.resonance)
+            
+        if self.stage_form:
+            text += "**Charms/Gear:** {}\n".format(self.charms_gear)
+            text += "**Timings:** {}\n".format(self.timings)
+            text += "**Replays:** {}\n".format(self.replays)
+            text += "**Notes:** {}\n".format(self.notes)
         
         text += "\n"
         
@@ -199,13 +212,10 @@ class Submit_Collect:
             
         elif not self.has_no_msg and self.attach_msg.content:
             text += self.attach_msg.content
-            # print(self.attach_msg.content)
             text += "\n\n"
             
         if self.form:
             text += "-# Data exported to tracking sheet! ✅"
-        if channel_type == ChannelType.STAFF:
-            text += "\n-# Submitted by: {}".format(self.forwarder_name)
         return text
     
     async def get_formation(self, index=-1, boss_name: str=None, counter: int=None) -> list[tuple]:
@@ -242,21 +252,10 @@ class Submit_Collect:
             files.extend(formation_files)
             
         # Retrieve channel based on channel type
-        channel = await self.__get_or_fetch_channel(to_channel_type_id(channel_type, self.channel_id))
+        channel = await self.__get_or_fetch_channel(to_channel_type_id(channel_type, self.channel_id, self.boss_type))
         sent_msg: discord.Message = None
         
         text = await self.__get_text(channel_type, url)
-        
-        if channel_type == ChannelType.STAFF:
-            if files:
-                sent_msg = await channel.send("Filler", files=files[:10])
-                if len(files) > 10:
-                    await channel.send(files=files[10:])
-            else:
-                sent_msg = await channel.send("Filler")
-            await sent_msg.edit(content=text)
-            
-            return sent_msg
         
         
         footer = "ID: {} | Submitted by: {}".format(self.counter, self.forwarder_name)
@@ -327,26 +326,12 @@ class Submit_Collect:
     
     async def __get_or_fetch_channel(self, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:
         """Get or fetch Discord channel by ID."""
-        channel: discord.channel = None
         try:
-            guild = self.bot.get_guild(SERVER_ID)
-            if not guild:
-                guild = await self.bot.fetch_guild(SERVER_ID)
-            
-            channel = guild.get_channel(channel_id)
-            if not channel:
-                channel = await guild.fetch_channel(channel_id)
-            
+            guild = await get_or_fetch_guild(self.bot, SERVER_ID)
+            return await get_or_fetch_channel(guild, channel_id)
         except Exception as e:
             print(e)
-            
-        return channel
-    
-    async def __channel_fetch_fail(self, channel_id: int):
-        """Log channel fetch failure to spam channel."""
-        spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
-        if spam_chan:
-            await spam_chan.send("Failed to fetch <#{}>".format(channel_id))
+            return None
     
     async def __log_formation(self, units: list, img_bytes, boss_name: str, counter: int) -> discord.Message:
         """Log formation data to spam channel for debugging. Returns the sent message."""

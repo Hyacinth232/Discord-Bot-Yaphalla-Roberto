@@ -1,10 +1,11 @@
 import re
 from datetime import datetime, timezone
 
+import discord
+
 from bot.core.constants import (ALIAS_DICT, EMOJIS, PRIVATE_CHANNEL_IDS,
-                                PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR_BOSSES,
-                                STAFF_CHANNEL_IDS)
-from bot.core.enum_classes import ChannelType
+                                PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR_BOSSES)
+from bot.core.enum_classes import BossType, ChannelType
 
 
 def sanitize_user_input(value: str) -> str:
@@ -14,69 +15,67 @@ def sanitize_user_input(value: str) -> str:
 
 pub_dict = {id: name for name, id in PUBLIC_CHANNEL_IDS.items()}
 priv_dict = {id: name for name, id in PRIVATE_CHANNEL_IDS.items()}
-staff_dict = {id: name for name, id in STAFF_CHANNEL_IDS.items()}
-
-def is_pub_channel(id: int) -> bool:
-    return id in pub_dict
 
 def is_kitchen_channel(id: int) -> bool:
-    return id in pub_dict or id in priv_dict or id in staff_dict
+    return id in pub_dict or id in priv_dict
 
-def is_ravaged_realm_channel(id: int) -> bool:
+def _is_ravaged_realm_channel(id: int) -> bool:
     if id in pub_dict:
         return pub_dict[id] in RR_BOSSES
     if id in priv_dict:
         return priv_dict[id] in RR_BOSSES
-    if id in staff_dict:
-        return staff_dict[id] in RR_BOSSES
     return False
 
-def to_channel_name(id: int) -> str:
+def is_afk_channel(id: int) -> bool:
+    return id == PUBLIC_CHANNEL_IDS["AFK"]
+
+def to_channel_name(id: int) -> str | None:
     if id in pub_dict:
         return pub_dict[id]
     if id in priv_dict:
         return priv_dict[id]
-    if id in staff_dict:
-        return staff_dict[id]
-    return ROBERTO_ID
+    return None
 
-def to_pub_id(id: int) -> int:
+def to_bot_id(id: int, boss_type: BossType) -> int:
+    bot_id = None
+    
+    if boss_type == BossType.NORMAL or boss_type == BossType.PHANTIMAL:
+        bot_id = _to_priv_id(id, boss_type)
+    
+    bot_id = bot_id or _to_pub_id(id, boss_type)
+    
+    return bot_id or ROBERTO_ID
+
+def _to_pub_id(id: int, boss_type: BossType) -> int | None:
+    if boss_type == BossType.NORMAL:
+        return PUBLIC_CHANNEL_IDS["AFK"]
+    if boss_type == BossType.PHANTIMAL:
+        return PUBLIC_CHANNEL_IDS["AFK"]
+    
     if id in pub_dict:
         return id
     if id in priv_dict:
         return PUBLIC_CHANNEL_IDS[priv_dict[id]]
-    if id in staff_dict:
-        return PUBLIC_CHANNEL_IDS[staff_dict[id]]
     return None
 
-def to_priv_id(id: int) -> int:
+def _to_priv_id(id: int, boss_type: BossType) -> int | None:
+    if boss_type == BossType.NORMAL:
+        return PRIVATE_CHANNEL_IDS["Normal"]
+    if boss_type == BossType.PHANTIMAL:
+        return PRIVATE_CHANNEL_IDS["Phantimal"]
+    
     if id in priv_dict:
         return id
     if id in pub_dict:
         return PRIVATE_CHANNEL_IDS[pub_dict[id]]
-    if id in staff_dict:
-        return PRIVATE_CHANNEL_IDS[staff_dict[id]]
-    return None
-    
-def to_staff_id(id: int) -> int:
-    if id in staff_dict:
-        return id
-    if id in pub_dict:
-        return STAFF_CHANNEL_IDS[pub_dict[id]]
-    if id in priv_dict:
-        return STAFF_CHANNEL_IDS[priv_dict[id]]
     return None
 
-def to_channel_type_id(channel_type: ChannelType, channel_id: int):
+def to_channel_type_id(channel_type: ChannelType, channel_id: int, boss_type: BossType=BossType.DREAM_REALM):
     if channel_type == ChannelType.PUBLIC:
-        return to_pub_id(channel_id)
+        return _to_pub_id(channel_id, boss_type)
     
     if channel_type == ChannelType.PRIVATE:
-        return to_priv_id(channel_id)
-    
-    if channel_type == ChannelType.STAFF:
-        return to_staff_id(channel_id)
-    
+        return _to_priv_id(channel_id, boss_type)
     return None
 
 def get_emoji(name: str):
@@ -113,3 +112,27 @@ def discord_timestamp(dt: datetime) -> str:
 
 def datetime_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+async def get_or_fetch_guild(bot: discord.Client, guild_id: int) -> discord.Guild | None:
+    """Get guild from cache, or fetch if not found."""
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        guild = await bot.fetch_guild(guild_id)
+    return guild
+
+
+async def get_or_fetch_channel(guild: discord.Guild, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:
+    """Get channel from cache, or fetch if not found."""
+    channel = guild.get_channel(channel_id)
+    if not channel:
+        channel = await guild.fetch_channel(channel_id)
+    return channel
+
+
+async def get_or_fetch_member(guild: discord.Guild, member_id: int) -> discord.Member | None:
+    """Get member from cache, or fetch if not found."""
+    member = guild.get_member(member_id)
+    if not member:
+        member = await guild.fetch_member(member_id)
+    return member

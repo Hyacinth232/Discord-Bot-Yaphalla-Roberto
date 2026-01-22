@@ -7,11 +7,12 @@ from discord.ext import commands
 from bot.core.commands_backend import Commands_Backend
 from bot.core.constants import (AMARYLLIS_ID, PRIVATE_CHANNEL_IDS,
                                 PUBLIC_CHANNEL_IDS, SERVER_ID, shared_config)
-from bot.core.enum_classes import TRANSLATE, ChannelType, Language
+from bot.core.enum_classes import TRANSLATE, BossType, ChannelType, Language
 from bot.core.utils import (clean_input_str, datetime_now, discord_timestamp,
-                            get_emoji, is_kitchen_channel, replace_emojis)
+                            get_emoji, is_afk_channel, is_kitchen_channel,
+                            replace_emojis)
 from bot.submission.submit_collect import Submit_Collect
-from bot.ui.modals import BasicModal, SpreadsheetModal
+from bot.ui.modals import BasicModal, SpreadsheetModal, StageSubmissionModal
 from bot.ui.views import DropdownView, ReportFormationView, YesNoView
 
 #s4 START_DATE = datetime(2025, 5, 23, tzinfo=timezone.utc)
@@ -443,6 +444,10 @@ class Commands_Frontend:
             await interaction.response.send_message("Submissions are only allowed from Kitchen channels", ephemeral=True)
             return
         
+        if is_afk_channel(channel_id):
+            await interaction.response.send_message("This command does not work in the AFK channel", ephemeral=True)
+            return
+        
         await interaction.response.defer(ephemeral=True)
         
         submitter = Submit_Collect(
@@ -458,7 +463,6 @@ class Commands_Frontend:
         await submitter.send_images(interaction, formations)
         report_view = ReportFormationView()
         await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
-        await submitter.forward_formation(ChannelType.STAFF, formations)
 
     async def context_basic_modal_wrapper(self, interaction: discord.Interaction, message: discord.Message):
         if isinstance(message.channel, discord.DMChannel):
@@ -514,9 +518,38 @@ class Commands_Frontend:
             )
         
         await interaction.response.send_modal(modal)
+    
+    async def stage_submission_modal_wrapper(self, interaction: discord.Interaction, attachments: list[discord.Attachment], boss_type: BossType):
+        """Wrapper for stage submission modal with file attachments."""
+        attachments = [attachment for attachment in attachments if attachment is not None]
+        
+        if not isinstance(interaction.channel, discord.DMChannel) and interaction.channel.id != PUBLIC_CHANNEL_IDS.get("AFK"):
+            await interaction.response.send_message("This command can only be used in the AFK channel.", ephemeral=True)
+            return
+        
+        channel_id = interaction.channel.id
+        if not is_kitchen_channel(channel_id):
+            await interaction.response.send_message("Submissions are only allowed from Kitchen channels", ephemeral=True)
+            return
+        
+        modal = StageSubmissionModal(
+            bot=self.bot,
+            backend=self.backend,
+            channel_id=channel_id,
+            attachments=attachments,
+            boss_type=boss_type
+        )
+        
+        await interaction.response.send_modal(modal)
             
-    async def submit_wrapper(self, ctx: commands.Context):
+    async def submit_wrapper(self, ctx: commands.Context, boss_type: BossType):
         if not ctx.guild or ctx.guild.id != SERVER_ID: return
+        
+        if boss_type == BossType.DREAM_REALM and is_afk_channel(ctx.channel.id):
+            return
+        
+        if (boss_type == BossType.NORMAL or boss_type == BossType.PHANTIMAL) and not is_afk_channel(ctx.channel.id):
+            return
         
         if not ctx.message.reference:
             """my_files = [
@@ -541,13 +574,13 @@ class Commands_Frontend:
             forwarder=ctx.author,
             channel_id=channel_id,
             orig_msg=replied_message,
-            counter_service=self.backend.counter_service
+            counter_service=self.backend.counter_service,
+            boss_type=boss_type
             )
         
         formations = await submitter.ctx_submit_message_wrapper()
         report_view = ReportFormationView()
         await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
-        await submitter.forward_formation(ChannelType.STAFF, formations)
         
     async def add_permissions(self, bot: discord.Client):
         

@@ -37,6 +37,14 @@ class ChannelType(Enum):
     PUBLIC = 0
     PRIVATE = 1
     STAFF = 2
+    
+class BossType(Enum):
+    NORMAL = 0
+    PHANTIMAL = 1
+    DREAM_REALM = 2
+    RAVAGED_REALM = 3
+    PRIMAL_LORD = 4
+    MISC = 5
 
 class Language(Enum):
     EN = 0
