@@ -482,6 +482,7 @@ async def submit_form(
     await commands_frontend.command_form_modal_wrapper(interaction, attachments)
 
 @bot.tree.command(name="submit_normal", description="Submit a stage to normal")
+@discord.app_commands.check(is_stage_role)
 async def submit_stage_normal(
     interaction: discord.Interaction,
     file1: discord.Attachment=None,
@@ -495,6 +496,7 @@ async def submit_stage_normal(
     
 
 @bot.tree.command(name="submit_phantimal", description="Submit a stage to phantimal")
+@discord.app_commands.check(is_stage_role)
 async def submit_stage_phantimal(
     interaction: discord.Interaction,
     file1: discord.Attachment=None,
@@ -550,10 +552,12 @@ async def submit_formation(ctx: commands.Context):
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.DREAM_REALM)
     
 @bot.command(name="subn")
+@discord.app_commands.check(is_stage_role)
 async def submit_formation_normal(ctx: commands.Context):
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.NORMAL)
     
 @bot.command(name="subp")
+@discord.app_commands.check(is_stage_role)
 async def submit_formation_phantimal(ctx: commands.Context):
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.PHANTIMAL)
     
