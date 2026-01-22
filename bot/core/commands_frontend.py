@@ -465,7 +465,7 @@ class Commands_Frontend:
         await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
 
     async def context_basic_modal_wrapper(self, interaction: discord.Interaction, message: discord.Message):
-        if isinstance(message.channel, discord.DMChannel):
+        if isinstance(message.channel, discord.DMChannel) or is_afk_channel(message.channel.id):
             await interaction.response.send_message("Submissions are only allowed from Yaphalla", ephemeral=True)
             return
         
@@ -478,7 +478,7 @@ class Commands_Frontend:
         await interaction.response.send_modal(modal)
         
     async def context_form_modal_wrapper(self, interaction: discord.Interaction, message: discord.Message):
-        if isinstance(message.channel, discord.DMChannel):
+        if isinstance(message.channel, discord.DMChannel) or is_afk_channel(message.channel.id):
             await interaction.response.send_message("Submissions are only allowed from Yaphalla", ephemeral=True)
             return
         
@@ -499,7 +499,7 @@ class Commands_Frontend:
     async def command_form_modal_wrapper(self, interaction: discord.Interaction, attachments: list[discord.Attachment]):
         attachments = [attachment for attachment in attachments if attachment is not None]
         
-        if isinstance(interaction.channel, discord.DMChannel):
+        if isinstance(interaction.channel, discord.DMChannel) or is_afk_channel(interaction.channel.id):
             await interaction.response.send_message("Submissions are only allowed from Yaphalla", ephemeral=True)
             return
         
@@ -523,7 +523,7 @@ class Commands_Frontend:
         """Wrapper for stage submission modal with file attachments."""
         attachments = [attachment for attachment in attachments if attachment is not None]
         
-        if not isinstance(interaction.channel, discord.DMChannel) and interaction.channel.id != PUBLIC_CHANNEL_IDS.get("AFK"):
+        if isinstance(interaction.channel, discord.DMChannel) or not is_afk_channel(interaction.channel.id):
             await interaction.response.send_message("This command can only be used in the AFK channel.", ephemeral=True)
             return
         

@@ -27,7 +27,7 @@ def _is_ravaged_realm_channel(id: int) -> bool:
     return False
 
 def is_afk_channel(id: int) -> bool:
-    return id == PUBLIC_CHANNEL_IDS["AFK"]
+    return id == PUBLIC_CHANNEL_IDS["AFK"] or id == PRIVATE_CHANNEL_IDS["Normal"] or id == PRIVATE_CHANNEL_IDS["Phantimal"]
 
 def to_channel_name(id: int) -> str | None:
     if id in pub_dict:
