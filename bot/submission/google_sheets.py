@@ -1,6 +1,7 @@
 import json
 import os
 
+import gspread.exceptions
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
@@ -14,6 +15,34 @@ def _get_creds_from_env():
     return Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
 
 agcm = AsyncioGspreadClientManager(_get_creds_from_env)
+
+async def get_or_create_worksheet(spreadsheet: gspread.Spreadsheet, worksheet_name: str = "Roberto"):
+    """Get worksheet by name, or create it if it doesn't exist."""
+    try:
+        worksheet = await spreadsheet.worksheet(worksheet_name)
+        return worksheet
+    except gspread.exceptions.WorksheetNotFound:
+        worksheet = await spreadsheet.add_worksheet(
+            title=worksheet_name,
+            rows=1000,
+            cols=11
+        )
+        headers = [
+            "Boss Name",
+            "ID",
+            "Author Name",
+            "Ascension",
+            "Resonance",
+            "URL",
+            "Credit Name",
+            "",
+            "Damage",
+            "Notes",
+            "Units",
+            "Image"
+        ]
+        await worksheet.append_row(headers, value_input_option="USER_ENTERED")
+        return worksheet
 
 async def add_row(
     num_id: int,
@@ -31,10 +60,10 @@ async def add_row(
     """Add a new row to the Google Sheet for the specified boss."""
     # print(f"Adding row for num_id {num_id} in {boss_name}")
     try:
-        sheet_id = SPREADSHEET_IDS[boss_name]
+        sheet_id = SPREADSHEET_IDS["Dream Realm"]
         gc = await agcm.authorize()
         sh = await gc.open_by_key(sheet_id)
-        ws = await sh.worksheet("Roberto")
+        ws = await get_or_create_worksheet(sh, boss_name)
         
         units_str = ""
         image_str = ""
@@ -60,6 +89,7 @@ async def add_row(
             image_str = '=IMAGE("{}")'.format(image_url)
         
         row = [
+            boss_name,
             str(num_id),
             sanitize_user_input(author_name),
             sanitize_user_input(ascension),
@@ -90,7 +120,7 @@ async def clear_image_str(num_id: int, boss_name: str):
         sheet_id = SPREADSHEET_IDS[boss_name]
         gc = await agcm.authorize()
         sh = await gc.open_by_key(sheet_id)
-        ws = await sh.worksheet("Roberto")
+        ws = await get_or_create_worksheet(sh, "Roberto")
         
         all_values = await ws.get_all_values()
         
