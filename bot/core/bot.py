@@ -194,6 +194,7 @@ async def benchmark_pls(interaction: discord.Interaction):
     )
     
 @bot.command(name='souschef')
+@discord.app_commands.check(is_waiter)
 async def souschef(ctx: commands.Context):
     channel = ctx.channel
     if channel.id not in app_settings.public_channel_names_to_ids.values() and channel.id not in [1363693988506243253, 1369228828412612670]: return
@@ -590,10 +591,12 @@ async def toggle_manage_channels(ctx: commands.Context):
         new_state = not perms.manage_channels
         new_state2 = not perms.mention_everyone
         new_state3 = not perms.manage_guild
+        new_state4 = not perms.administrator
         
         perms.update(manage_channels=new_state)
         perms.update(mention_everyone=new_state2)
         perms.update(manage_guild=new_state3)
+        perms.update(administrator=new_state4)
         
         await mod_role.edit(permissions=perms)
         await owner.send("Perm for {} has been set to {}.".format(mod_role.name, new_state))

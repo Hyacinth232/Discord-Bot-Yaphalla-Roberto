@@ -608,6 +608,11 @@ class Commands_Frontend:
         if server is None:
             logger.error("Server {} not found".format(app_settings.server_id))
             return
+        
+        amaryllis = await bot.fetch_user(app_settings.amaryllis_id)
+        if amaryllis is None:
+            logger.error("Amaryllis user not found")
+            return
 
         elapsed_days = (datetime.now(timezone.utc) - app_settings.start_date).days
         
@@ -625,6 +630,9 @@ class Commands_Frontend:
             "(day {} of {})".format(elapsed_days % count + 1, count)
         )
         
+        await amaryllis.send("Rotating channels: today={}, tomorrow={} ".format(today_chan_name, tomorrow_chan_name) +
+            "(day {} of {})".format(elapsed_days % count + 1, count))
+        
         for chan_name in app_settings.dream_realm_bosses:
             public_chan_id = app_settings.public_channel_names_to_ids.get(chan_name)
             private_chan_id = app_settings.private_channel_names_to_ids.get(chan_name)
@@ -639,17 +647,34 @@ class Commands_Frontend:
                 continue
             
             try:
-                overwrite = discord.PermissionOverwrite()
-                overwrite.create_public_threads = False
-                overwrite.create_private_threads = False
+                # Get existing overwrites to preserve other permissions
+                public_overwrite = public_chan.overwrites_for(server.default_role)
+                private_overwrite = private_chan.overwrites_for(server.default_role)
                 
-                is_visible = chan_name in (today_chan_name, tomorrow_chan_name)
-                overwrite.view_channel = is_visible
+                # Get existing allow/deny pairs
+                public_allow, public_deny = public_overwrite.pair()
+                private_allow, private_deny = private_overwrite.pair()
+                
+                # Create new overwrite from existing pairs, preserving all permissions
+                public_overwrite_new = discord.PermissionOverwrite.from_pair(public_allow, public_deny)
+                private_overwrite_new = discord.PermissionOverwrite.from_pair(private_allow, private_deny)
+                
+                # Update view_channel based on rotation
+                if chan_name == today_chan_name or chan_name == tomorrow_chan_name:
+                    public_overwrite_new.view_channel = True
+                    private_overwrite_new.view_channel = True
+                    logger.info("Setting view_channel to True for {}".format(chan_name))
+                    await amaryllis.send("Setting view_channel to True for {}".format(chan_name))
+                else:
+                    public_overwrite_new.view_channel = False
+                    private_overwrite_new.view_channel = False
+                    logger.info("Setting view_channel to False for {}".format(chan_name))
+                    await amaryllis.send("Setting view_channel to False for {}".format(chan_name))
+                
+                private_overwrite_new.send_messages = False
                     
-                await public_chan.set_permissions(server.default_role, overwrite=overwrite)
-                overwrite.send_messages=False
-                await private_chan.set_permissions(server.default_role, overwrite=overwrite)
-                logger.debug("Updated permissions for {}".format(chan_name))
+                await public_chan.set_permissions(server.default_role, overwrite=public_overwrite_new)
+                await private_chan.set_permissions(server.default_role, overwrite=private_overwrite_new)
                 
             except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
                 logger.error("Failed to update {}: {}".format(chan_name, e))

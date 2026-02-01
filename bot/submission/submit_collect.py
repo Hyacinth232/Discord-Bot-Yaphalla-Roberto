@@ -11,6 +11,7 @@ from bot.core.utils import (get_or_fetch_channel, get_or_fetch_member,
                             get_or_fetch_server, to_bot_id, to_channel_name,
                             to_channel_type_id)
 from bot.image.analyze_image import Analyze_Image
+from bot.image.damage_extractor import DamageExtractor
 from bot.services.counter_service import CounterService
 from bot.submission.google_sheets import add_row
 from bot.ui.embeds import make_embeds
@@ -26,6 +27,7 @@ class Submit_Collect:
         self.bot = bot
         self.backend = backend
         self.analyzer = Analyze_Image()
+        self.damage_extractor = DamageExtractor(languages='eng')
         self.counter_service = counter_service or CounterService(backend.users.db)
         
         self.forwarder: discord.Member = forwarder
@@ -48,6 +50,7 @@ class Submit_Collect:
         self.author_name = ""
         self.forwarder_name = ""
         self.title = "Submission"
+        self.extracted_damage = None  # Store extracted damage value
         
         if not self.has_no_msg:
             self.is_forwarded: bool = orig_msg.flags.forwarded
@@ -64,7 +67,11 @@ class Submit_Collect:
         self.resonance = resonance
         self.ascension = ascension
         self.credit_name = credit_name
-        self.damage = damage
+        # Use extracted damage if provided damage is empty and we have extracted damage
+        if not damage and self.extracted_damage is not None:
+            self.damage = f"{self.extracted_damage:,.0f}"
+        else:
+            self.damage = damage
         self.notes = notes
         
     def fill_stage_form(self, title: str, charms_gear: str, timings: str, replays: str, notes: str):
@@ -200,6 +207,11 @@ class Submit_Collect:
             text += "**Replays:** {}\n".format(self.replays)
             text += "**Notes:** {}\n".format(self.notes)
         
+        """
+        if self.extracted_damage is not None:
+            text += "**Bot Damage Extraction:** {}".format(f"{self.extracted_damage:,.0f}")
+        """
+        
         text += "\n"
         
         if self.form and self.notes:
@@ -295,6 +307,15 @@ class Submit_Collect:
             return None
         
         image_bytes = await attachment.read()
+        
+        try:
+            damage_value = self.damage_extractor.extract_largest_damage(image_bytes)
+            if damage_value is not None and (self.extracted_damage is None or damage_value > self.extracted_damage):
+                self.extracted_damage = damage_value
+        except Exception as e:
+            print(f"Damage extraction failed: {e}")
+        
+        # Extract formation units
         units = self.analyzer.process_image(image_bytes)
         units = [unit for unit in units if unit is not None]
         
