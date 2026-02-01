@@ -1,23 +1,23 @@
 import io
+import logging
 from datetime import datetime, timezone
 
 import discord
 from discord.ext import commands
 
+logger = logging.getLogger()
+
 from bot.core.commands_backend import Commands_Backend
-from bot.core.constants import (AMARYLLIS_ID, PRIVATE_CHANNEL_IDS,
-                                PUBLIC_CHANNEL_IDS, SERVER_ID, shared_config)
+from bot.core.config import app_settings
 from bot.core.enum_classes import TRANSLATE, BossType, ChannelType, Language
 from bot.core.utils import (clean_input_str, datetime_now, discord_timestamp,
-                            get_emoji, is_afk_channel, is_kitchen_channel,
-                            replace_emojis)
+                            get_emoji, get_or_fetch_channel,
+                            get_or_fetch_server, is_afk_channel,
+                            is_kitchen_channel, replace_emojis)
 from bot.submission.submit_collect import Submit_Collect
 from bot.ui.modals import BasicModal, SpreadsheetModal, StageSubmissionModal
 from bot.ui.views import DropdownView, ReportFormationView, YesNoView
 
-#s4 START_DATE = datetime(2025, 5, 23, tzinfo=timezone.utc)
-# s5
-START_DATE = datetime(2025, 9, 26, tzinfo=timezone.utc)
 
 def clean_name(text: str):
     """Clean and truncate formation name to 35 characters."""
@@ -396,7 +396,7 @@ class Commands_Frontend:
             
     async def dropdown_wrapper(self, interaction: discord.Interaction, game_mode: str):
         """Display dropdown menu for boss selection."""
-        text = '\n'.join(["<#{}>".format(PUBLIC_CHANNEL_IDS[boss_name]) for boss_name in shared_config[game_mode]])
+        text = '\n'.join(["<#{}>".format(app_settings.public_channel_names_to_ids[boss_name]) for boss_name in app_settings.shared_config[game_mode]])
         text += '\n\nView Boss Infographs by selecting a Boss below.'
         title = game_mode.replace('_', ' ').title()
                 
@@ -406,7 +406,7 @@ class Commands_Frontend:
             color=discord.Color.fuchsia(),
         )
         
-        view = DropdownView(shared_config[game_mode], 'Select a Boss...', self.get_image_embed)
+        view = DropdownView(app_settings.shared_config[game_mode], 'Select a Boss...', self.get_image_embed)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=False)
         view.message = await interaction.original_response()
             
@@ -543,7 +543,7 @@ class Commands_Frontend:
         await interaction.response.send_modal(modal)
             
     async def submit_wrapper(self, ctx: commands.Context, boss_type: BossType):
-        if not ctx.guild or ctx.guild.id != SERVER_ID: return
+        if not ctx.guild or ctx.guild.id != app_settings.server_id: return
         
         if boss_type == BossType.DREAM_REALM and is_afk_channel(ctx.channel.id):
             return
@@ -584,11 +584,11 @@ class Commands_Frontend:
         
     async def add_permissions(self, bot: discord.Client):
         
-        guild = bot.get_guild(SERVER_ID)
+        guild = bot.get_guild(app_settings.server_id)
         for game_mode in ['dream_realm', 'primal_lords']:
-            for boss_name in shared_config[game_mode]:
+            for boss_name in app_settings.shared_config[game_mode]:
                 try:
-                    private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
+                    private_channel = guild.get_channel(app_settings.private_channel_names_to_ids[boss_name])
                     overwrite = discord.PermissionOverwrite()
                     waiter = guild.get_role(1366553846234746971)
                     editor = guild.get_role(1366553665816625253)
@@ -601,61 +601,57 @@ class Commands_Frontend:
                     pass
         
     async def rotate_channels(self, bot: discord.Client):
-        game_mode = 'dream_realm'
-        
-        owner = await bot.fetch_user(AMARYLLIS_ID)
-        guild = bot.get_guild(SERVER_ID)
-        if guild is None:
-            print("Server not found.")
+        # s4 datetime(2025, 5, 23, tzinfo=timezone.utc)
+        # s5 datetime(2025, 9, 26, tzinfo=timezone.utc)
+        """Periodic task to rotate channel permissions based on elapsed days."""
+        server = await get_or_fetch_server(bot, app_settings.server_id)
+        if server is None:
+            logger.error("Server {} not found".format(app_settings.server_id))
             return
 
-        elapsed_days = (datetime_now() - START_DATE).days
+        elapsed_days = (datetime.now(timezone.utc) - app_settings.start_date).days
         
-        count = len(shared_config[game_mode])
-        today_boss = shared_config[game_mode][elapsed_days % count]
-        tomorrow_boss = shared_config[game_mode][(elapsed_days + 1) % count]
-        
-        """for boss_name in shared_config[game_mode]:
-            private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
-            try:
-                overwrite = discord.PermissionOverwrite()
-                overwrite.view_channel=False
-                await private_channel.set_permissions(guild.default_role, overwrite=overwrite)
-                
-            except Exception as e:
-                await owner.send("Failed to hide {}: {}".format(boss_name, e))
-        """
+        count = len(app_settings.dream_realm_bosses)
+        if count == 0:
+            logger.error("No channels configured to rotate")
+            return
 
-        for boss_name in shared_config[game_mode]:
-            private_channel = guild.get_channel(PRIVATE_CHANNEL_IDS[boss_name])
-            public_channel = guild.get_channel(PUBLIC_CHANNEL_IDS[boss_name])
+        
+        today_chan_name = app_settings.dream_realm_bosses[elapsed_days % count]
+        tomorrow_chan_name = app_settings.dream_realm_bosses[(elapsed_days + 1) % count]
+        
+        logger.info(
+            "Rotating channels: today={}, tomorrow={} ".format(today_chan_name, tomorrow_chan_name) +
+            "(day {} of {})".format(elapsed_days % count + 1, count)
+        )
+        
+        for chan_name in app_settings.dream_realm_bosses:
+            public_chan_id = app_settings.public_channel_names_to_ids.get(chan_name)
+            private_chan_id = app_settings.private_channel_names_to_ids.get(chan_name)
+            if public_chan_id is None or private_chan_id is None:
+                logger.warning("No channel ID found for {}".format(chan_name))
+                continue
+                
+            public_chan = await get_or_fetch_channel(server, public_chan_id)
+            private_chan = await get_or_fetch_channel(server, private_chan_id)
+            if public_chan is None or private_chan is None:
+                logger.warning("Channel {} (Public ID: {}, Private ID: {}) not found".format(chan_name, public_chan_id, private_chan_id))
+                continue
             
             try:
                 overwrite = discord.PermissionOverwrite()
                 overwrite.create_public_threads = False
                 overwrite.create_private_threads = False
                 
-                if boss_name == today_boss or boss_name == tomorrow_boss:
-                    overwrite.view_channel=True
-                else:
-                    overwrite.view_channel=False
+                is_visible = chan_name in (today_chan_name, tomorrow_chan_name)
+                overwrite.view_channel = is_visible
                     
-                await public_channel.set_permissions(guild.default_role, overwrite=overwrite)
-                
+                await public_chan.set_permissions(server.default_role, overwrite=overwrite)
                 overwrite.send_messages=False
-                await private_channel.set_permissions(guild.default_role, overwrite=overwrite)
+                await private_chan.set_permissions(server.default_role, overwrite=overwrite)
+                logger.debug("Updated permissions for {}".format(chan_name))
                 
-                """if overwrite.view_channel == False:
-                    overwrite.view_channel = None
-                    
-                overwrite.send_messages=False
-                chef_role = guild.get_role(1332134942787764284)
-                await private_channel.set_permissions(chef_role, overwrite=overwrite)
-                
-                overwrite.send_messages=True
-                for role_id in WAITER_ROLE_IDS:
-                    role = guild.get_role(role_id)
-                    await private_channel.set_permissions(role, overwrite=overwrite)"""
-                
+            except (discord.Forbidden, discord.HTTPException, discord.NotFound) as e:
+                logger.error("Failed to update {}: {}".format(chan_name, e))
             except Exception as e:
-                await owner.send("Failed to update {}: {}".format(boss_name, e))
+                logger.exception("Unexpected error updating {}: {}".format(chan_name, e))

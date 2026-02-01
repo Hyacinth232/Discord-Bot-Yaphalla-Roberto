@@ -43,7 +43,7 @@ FONT_PATH = _BASE_DIR / "assets" / "fonts" / "Lato-Regular.ttf"
 CIRC_FOLDER = _BASE_DIR / "assets" / "images" / "templates"
 
 ### constants
-DR = 'dream_realm'
+DR = 'dream_realm_bosses'
 PL = 'primal_lords'
 RR = 'ravaged_realm'
 
@@ -77,7 +77,7 @@ WAITER_ROLE_IDS = shared_config["waiter_role_ids"]
 STAGE_ROLE_IDS = shared_config["stage_role_ids"]
 ADMIN_MOD_ROLE_IDS = shared_config["admin_mod_role_ids"]
 CHEF_ROLE_ID = shared_config["chef_role_id"]
-AMARYLLIS_ID = shared_config["dahlia_id"]
+AMARYLLIS_ID = shared_config["amaryllis_id"]
 
 IMAGE_KEYS = ['paragon', 'charms', 'charmspvp', 'charms_reference', 'talents', '!submit prompt']
 IMAGE_KEYS.extend(shared_config[DR])

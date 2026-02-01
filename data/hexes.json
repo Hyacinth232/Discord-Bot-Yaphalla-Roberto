@@ -120,7 +120,8 @@
             "Walker",
             "Cyran",
             "Zanie",
-            "Turret"
+            "Turret",
+            "Evie"
         ],
         "Mauler": [
             "Nazrik",
@@ -141,7 +142,8 @@
             "Smokey-&-Meerky",
             "Soren",
             "Zandrok",
-            "Gala"
+            "Gala",
+            "Hepler"
         ],
         "Wilder": [
             "Arden",
@@ -165,7 +167,9 @@
             "Thador",
             "Velara",
             "Pang",
-            "Ravion"
+            "Ravion",
+            "Pippa",
+            "Solise"
         ],
         "Graveborn": [
             "Isabella",
@@ -185,7 +189,8 @@
             "Viperian",
             "Shemira",
             "Daimon",
-            "Shadewing"
+            "Shadewing",
+            "Zorya"
         ],
         "Celestial": [
             "Alna",
@@ -198,7 +203,8 @@
             "Lailah",
             "Scarlita",
             "Talene",
-            "Baelran"
+            "Baelran",
+            "Aurora"
         ],
         "Hypogean": [
             "Berial",
@@ -210,7 +216,8 @@
             "Cryonaia",
             "Kulu",
             "Saida",
-            "Mehira"
+            "Mehira",
+            "Contess"
         ],
         "Dimensional": [
             "Natsu",

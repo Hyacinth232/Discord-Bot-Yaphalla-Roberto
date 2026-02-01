@@ -3,7 +3,7 @@ import os
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
-from bot.core.constants import MONGO_URI
+from bot.core.config import db_settings
 
 DEFAULT_HEXES = ["Graveborn-Hex", "Generic-Outline", "Lightbearer-Hex", "Artifact-S3-Outline"]
 DEFAULT_MAP = "Arena I"
@@ -13,7 +13,7 @@ class Database:
     """MongoDB database interface for user formations and image links."""
     def __init__(self):
         """Initialize MongoDB connection and collections."""
-        self.client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+        self.client = MongoClient(db_settings.mongo_uri, server_api=ServerApi('1'))
         self.db = self.client['discord_bot_roberto']
         self.users_db = self.db['users']
         self.counters_db = self.db['counters']

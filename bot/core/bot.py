@@ -1,5 +1,5 @@
 import io
-import os
+import logging
 from datetime import datetime, timezone
 
 import discord
@@ -7,11 +7,7 @@ from discord.ext import commands, tasks
 
 from bot.core.commands_backend import Commands_Backend
 from bot.core.commands_frontend import Commands_Frontend
-from bot.core.constants import (ADMIN_MOD_ROLE_IDS, ALL_VALID_NAMES,
-                                AMARYLLIS_ID, ARTIFACTS, BOT_TOKEN, DR, FILLS,
-                                IMAGE_KEYS, LINES, MAPS, PL,
-                                PUBLIC_CHANNEL_IDS, ROBERTO_ID, RR, SERVER_ID,
-                                STAGE_ROLE_IDS, UNITS, USAGE, WAITER_ROLE_IDS)
+from bot.core.config import app_settings, data_settings, path_settings
 from bot.core.enum_classes import BossType
 from bot.core.utils import datetime_now, discord_timestamp
 from bot.database.database import Database
@@ -27,6 +23,8 @@ intents.guilds = True
 intents.messages = True
 intents.message_content = True
 intents.members = True
+
+logger = logging.getLogger()
 
 # Initialize singletons - dependency injection setup
 _db = Database()
@@ -48,38 +46,43 @@ async def setup_hook():
 @bot.event
 async def on_ready():
     """Initialize bot on startup."""
-    print(bot.user)
+    logger.info("Bot {} (ID: {}) started".format(bot.user, bot.user.id))
+    logger.info("Connected to {} server(s)".format(len(bot.guilds)))
     
-    guild = discord.Object(id=SERVER_ID)
-
-    bot.tree.clear_commands(guild=guild)
-    await bot.tree.sync(guild=guild)
+    server = discord.Object(id=app_settings.server_id)
+    try:
+        bot.tree.clear_commands(guild=server)
+        await bot.tree.sync(guild=server)
+    except Exception as e:
+        logger.error("Failed to sync commands: {}".format(e))
+    
     await bot.tree.sync()
 
-    owner = await bot.fetch_user(AMARYLLIS_ID)
+    owner = await bot.fetch_user(app_settings.amaryllis_id)
     if owner: await owner.send(", ".join([guild.name for guild in bot.guilds]))
     
     rotate_channels.start()
+    logger.info("Channel rotation task started")
 
 ### AUTOCOMPLETES ###
 async def all_name_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for all valid unit/artifact names."""
-    return [discord.app_commands.Choice(name=name, value=name) for name in ALL_VALID_NAMES
+    return [discord.app_commands.Choice(name=name, value=name) for name in data_settings.all_valid_names
             if name.lower().startswith(current.lower())][:25]
 
 async def units_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for unit names."""
-    return [discord.app_commands.Choice(name=name, value=name) for name in UNITS
+    return [discord.app_commands.Choice(name=name, value=name) for name in data_settings.units
             if name.lower().startswith(current.lower())][:25]
 
 async def artifacts_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for artifact names."""
-    return [discord.app_commands.Choice(name=name, value=name) for name in ARTIFACTS
+    return [discord.app_commands.Choice(name=name, value=name) for name in data_settings.artifacts
             if name.lower().startswith(current.lower())][:25]
     
 async def set_map_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for map/arena names."""
-    return [discord.app_commands.Choice(name=map, value=map) for map in MAPS
+    return [discord.app_commands.Choice(name=map, value=map) for map in data_settings.maps
             if len(map) > 2 and current.lower() in map.lower()][:25]
 
 async def formations_autocomplete(interaction: discord.Interaction, current: str):
@@ -89,15 +92,15 @@ async def formations_autocomplete(interaction: discord.Interaction, current: str
 
 async def fills_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for fill hex names."""
-    return [discord.app_commands.Choice(name=name, value=name) for name in FILLS + ["None"]
+    return [discord.app_commands.Choice(name=name, value=name) for name in data_settings.fills + ["None"]
             if name.lower().startswith(current.lower())][:25]
     
 async def lines_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for outline hex names."""
-    return [discord.app_commands.Choice(name=name, value=name) for name in LINES
+    return [discord.app_commands.Choice(name=name, value=name) for name in data_settings.lines
             if name.lower().startswith(current.lower())][:25]
     
-channel_names_plus_default = list(PUBLIC_CHANNEL_IDS.keys())
+channel_names_plus_default = list(app_settings.public_channel_names_to_ids.keys())
 channel_names_plus_default.append("DEFAULT")
 async def channels_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for channel names."""
@@ -106,7 +109,7 @@ async def channels_autocomplete(interaction: discord.Interaction, current: str):
 
 async def image_keys_autocomplete(interaction: discord.Interaction, current: str):
     """Autocomplete for image keys."""
-    return [discord.app_commands.Choice(name=key, value=key) for key in IMAGE_KEYS
+    return [discord.app_commands.Choice(name=key, value=key) for key in app_settings.image_keys
             if key.lower().startswith(current.lower())][:25]
 
 unit_indices = [discord.app_commands.Choice(name=str(idx), value=idx) for idx in range(1, 15)]
@@ -129,7 +132,7 @@ async def rotate_channels():
 """
 @bot.tree.command(name="help", description="Show Roberto's list of commands")
 async def help_command(interaction: discord.Interaction, show_public: bool=False):
-    await interaction.response.send_message(USAGE, ephemeral=not show_public)
+    await interaction.response.send_message(path_settings.usage_text, ephemeral=not show_public)
 """
 
 @bot.tree.command(name="emoji", description="Shows character with the given name")
@@ -156,31 +159,31 @@ async def time_now(interaction: discord.Interaction):
 ##############
 
 def is_admin(interaction: discord.Interaction) -> bool:
-    if interaction.guild is None or interaction.guild.id != SERVER_ID:
+    if interaction.guild is None or interaction.guild.id != app_settings.server_id:
         return False
     if interaction.user.guild_permissions.administrator:
         return True
-    if interaction.user.id == AMARYLLIS_ID:
+    if interaction.user.id == app_settings.amaryllis_id:
         return True
-    return any(role.id in ADMIN_MOD_ROLE_IDS for role in interaction.user.roles)
+    return any(role.id in app_settings.admin_mod_role_ids for role in interaction.user.roles)
 
 def is_waiter(interaction: discord.Interaction) -> bool:
-    if interaction.guild is None or interaction.guild.id != SERVER_ID:
+    if interaction.guild is None or interaction.guild.id != app_settings.server_id:
         return False
     if interaction.user.guild_permissions.administrator:
         return True
-    if interaction.user.id == AMARYLLIS_ID:
+    if interaction.user.id == app_settings.amaryllis_id:
         return True
-    return any(role.id in WAITER_ROLE_IDS for role in interaction.user.roles)
+    return any(role.id in app_settings.waiter_role_ids for role in interaction.user.roles)
 
 def is_stage_role(interaction: discord.Interaction) -> bool:
-    if interaction.guild is None or interaction.guild.id != SERVER_ID:
+    if interaction.guild is None or interaction.guild.id != app_settings.server_id:
         return False
     if interaction.user.guild_permissions.administrator:
         return True
-    if interaction.user.id == AMARYLLIS_ID:
+    if interaction.user.id == app_settings.amaryllis_id:
         return True
-    return any(role.id in STAGE_ROLE_IDS for role in interaction.user.roles)
+    return any(role.id in app_settings.stage_role_ids for role in interaction.user.roles)
 
 @bot.tree.command(name="benchmark")
 @discord.app_commands.check(is_waiter)
@@ -193,7 +196,7 @@ async def benchmark_pls(interaction: discord.Interaction):
 @bot.command(name='souschef')
 async def souschef(ctx: commands.Context):
     channel = ctx.channel
-    if channel.id not in PUBLIC_CHANNEL_IDS.values() and channel.id not in [1363693988506243253, 1369228828412612670]: return
+    if channel.id not in app_settings.public_channel_names_to_ids.values() and channel.id not in [1363693988506243253, 1369228828412612670]: return
     
     content = ctx.message.content[len(ctx.prefix) + len(ctx.invoked_with):].lstrip()
     text = '<@&1348163901149417553> ' + content
@@ -212,7 +215,7 @@ async def souschef(ctx: commands.Context):
 @discord.app_commands.check(is_waiter)
 @discord.app_commands.autocomplete(key=image_keys_autocomplete)
 async def yap_update_image(interaction: discord.Interaction, key: str, text: str):
-    if key not in IMAGE_KEYS:
+    if key not in app_settings.image_keys:
         await interaction.response.send_message("Invalid image key.", ephemeral=True)
         return
     await commands_frontend.set_image_link(interaction, key, text)
@@ -228,19 +231,19 @@ async def paragon(interaction: discord.Interaction):
     
 @bot.tree.command(name="dream-realm", description="Yaphalla's Dream Realm infographics")
 async def dream_realm(interaction: discord.Interaction):
-    await commands_frontend.dropdown_wrapper(interaction, DR)
+    await commands_frontend.dropdown_wrapper(interaction, 'dream_realm_bosses')
     
 @bot.tree.command(name="dr", description="Yaphalla's Dream Realm infographics")
 async def dr(interaction: discord.Interaction):
-    await commands_frontend.dropdown_wrapper(interaction, DR)
+    await commands_frontend.dropdown_wrapper(interaction, 'dream_realm_bosses')
     
 @bot.tree.command(name="primal-lord", description="Yaphalla's Primal Lord infographics")
 async def primal_lord(interaction: discord.Interaction):
-    await commands_frontend.dropdown_wrapper(interaction, PL)
+    await commands_frontend.dropdown_wrapper(interaction, 'primal_lords')
     
 @bot.tree.command(name="pl", description="Yaphalla's Primal Lord infographics")
 async def pl(interaction: discord.Interaction):
-    await commands_frontend.dropdown_wrapper(interaction, PL)
+    await commands_frontend.dropdown_wrapper(interaction, 'primal_lords')
 
 @bot.tree.command(name="charms", description="Show Yaphalla's DR Charms Graphic")
 async def charms(interaction: discord.Interaction):
@@ -265,7 +268,7 @@ async def charms(interaction: discord.Interaction):
 
 @bot.tree.command(name="ravaged-realm", description="Yaphalla's Ravaged Realm infographics")
 async def rr(interaction: discord.Interaction):
-    await commands_frontend.dropdown_wrapper(interaction, RR)
+    await commands_frontend.dropdown_wrapper(interaction, 'ravaged_realm')
 
 
 #########################
@@ -419,7 +422,7 @@ async def set_base_outline(interaction: discord.Interaction, tile_type: discord.
 @discord.app_commands.autocomplete(map=set_map_autocomplete)
 @discord.app_commands.autocomplete(channel=channels_autocomplete)
 async def yap_set_map(interaction: discord.Interaction, channel: str, map: str):
-    channel_id  = PUBLIC_CHANNEL_IDS[channel] if channel in PUBLIC_CHANNEL_IDS else ROBERTO_ID
+    channel_id  = app_settings.public_channel_names_to_ids[channel] if channel in app_settings.public_channel_names_to_ids else app_settings.roberto_id
     await commands_frontend.set_map_wrapper(interaction, map=map, user_id=channel_id, save_map=True)
 
 @bot.tree.command(name="yap_base_hex")
@@ -428,7 +431,7 @@ async def yap_set_map(interaction: discord.Interaction, channel: str, map: str):
 @discord.app_commands.autocomplete(line=lines_autocomplete)
 @discord.app_commands.autocomplete(channel=channels_autocomplete)
 async def yap_set_base_hex(interaction: discord.Interaction, channel: str, fill: str, line: str):
-    channel_id  = PUBLIC_CHANNEL_IDS[channel] if channel in PUBLIC_CHANNEL_IDS else ROBERTO_ID
+    channel_id  = app_settings.public_channel_names_to_ids[channel] if channel in app_settings.public_channel_names_to_ids else app_settings.roberto_id
     make_transparent = fill == "None"
     await commands_frontend.yap_set_base_hex(interaction, fill, line, make_transparent, user_id=channel_id, ephemeral=False)
         
@@ -438,7 +441,7 @@ async def yap_set_base_hex(interaction: discord.Interaction, channel: str, fill:
 @discord.app_commands.autocomplete(hex=fills_autocomplete)
 @discord.app_commands.autocomplete(channel=channels_autocomplete)
 async def yap_fill(interaction: discord.Interaction, channel: str, hex: str):
-    channel_id  = PUBLIC_CHANNEL_IDS[channel] if channel in PUBLIC_CHANNEL_IDS else ROBERTO_ID
+    channel_id  = app_settings.public_channel_names_to_ids[channel] if channel in app_settings.public_channel_names_to_ids else app_settings.roberto_id
     await commands_frontend.set_base_hex(interaction, 0, hex, user_id=channel_id, ephemeral=False)
         
 @bot.tree.command(name="yap_outline")
@@ -446,7 +449,7 @@ async def yap_fill(interaction: discord.Interaction, channel: str, hex: str):
 @discord.app_commands.autocomplete(hex=lines_autocomplete)
 @discord.app_commands.autocomplete(channel=channels_autocomplete)
 async def yap_outline(interaction: discord.Interaction, channel: str, hex: str):
-    channel_id  = PUBLIC_CHANNEL_IDS[channel] if channel in PUBLIC_CHANNEL_IDS else ROBERTO_ID
+    channel_id  = app_settings.public_channel_names_to_ids[channel] if channel in app_settings.public_channel_names_to_ids else app_settings.roberto_id
     await commands_frontend.set_base_hex(interaction, 1, hex, user_id=channel_id, ephemeral=False)
 """
 
@@ -568,14 +571,14 @@ async def collect(ctx: commands.Context, index: int=-1):
 ### OVERRIDES
 @bot.command(name='amaryllis')
 async def toggle_manage_channels(ctx: commands.Context):
-    owner = await bot.fetch_user(AMARYLLIS_ID)
-    guild = bot.get_guild(SERVER_ID)
+    owner = await bot.fetch_user(app_settings.amaryllis_id)
+    guild = bot.get_guild(app_settings.server_id)
     
     if guild is None:
         print("Server not found.")
         return
 
-    if ctx.author.id != AMARYLLIS_ID: return
+    if ctx.author.id != app_settings.amaryllis_id: return
     
     try:
         mod_role = ctx.guild.get_role(1348155560780103701)
@@ -599,5 +602,3 @@ async def toggle_manage_channels(ctx: commands.Context):
         await owner.send("No permission to toggle")
     except discord.HTTPException as e:
         await owner.send("Failed: {}".format(e))
-
-bot.run(BOT_TOKEN)

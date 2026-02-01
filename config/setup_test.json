@@ -1,14 +1,30 @@
 {
     "server_id": 1332875298668154900,
     "thread_id": 1332878709870301287,
-    "public_channel_ids": {
-        "Test": 1332875766194638898,
-        "AFK": 1332876430371192833
+    "private_channel_names_to_ids": {
+        "Test": 1332875747416870974,
+        "Normal": 1332875766194638898,
+        "Phantimal": 1332875812222930944,
+        "Sarethiel": 1332876517256069200,
+        "Gloommaw": 1332875298668154903,
+        "Doomscourge": 1375655097404624997,
+        "Blightshroom": 1332876612135292959,
+        "Nocturne Judicator": 1467331258626478355,
+        "Magmazard": 1467331295406456963,
+        "Necrodrakon": 1467331342399443078,
+        "King Croaker": 1467331392810647592
     },
-    "private_channel_ids": {
-        "Test": 1332875812222930944,
-        "Normal": 1332876459592781884,
-        "Phantimal": 1332876517256069200
+    "public_channel_names_to_ids": {
+        "Test": 1332876322426327191,
+        "AFK": 1332876430371192833,
+        "Sarethiel": 1332876459592781884,
+        "Gloommaw": 1375655111778369546,
+        "Doomscourge": 1332876541499146240,
+        "Blightshroom": 1467331200568791071,
+        "Nocturne Judicator": 1467331275823251612,
+        "Magmazard": 1467331322262589550,
+        "Necrodrakon": 1467331368525627536,
+        "King Croaker": 1467331412855099463
     }
 }
 

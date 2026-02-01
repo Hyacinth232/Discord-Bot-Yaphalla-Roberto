@@ -5,7 +5,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from bot.core.constants import CIRC_FOLDER
+from bot.core.config import path_settings
 
 BOUNDARIES = [{
     1: [0.328, 0.423, 0.435, 0.521],
@@ -47,7 +47,7 @@ class Analyze_Image:
         self.clear()
         
         self.circ_templates = {}
-        for file_path in CIRC_FOLDER.iterdir():
+        for file_path in path_settings.templates_folder.iterdir():
             if file_path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
                 input_img = cv2.imread(str(file_path), cv2.IMREAD_UNCHANGED)
                 if input_img is None:

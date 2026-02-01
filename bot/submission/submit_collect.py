@@ -5,10 +5,10 @@ from pathlib import Path
 import discord
 
 from bot.core.commands_backend import Commands_Backend
-from bot.core.constants import SERVER_ID, SPAM_CHANNEL_ID
+from bot.core.config import app_settings
 from bot.core.enum_classes import BossType, ChannelType
-from bot.core.utils import (get_or_fetch_channel, get_or_fetch_guild,
-                            get_or_fetch_member, to_bot_id, to_channel_name,
+from bot.core.utils import (get_or_fetch_channel, get_or_fetch_member,
+                            get_or_fetch_server, to_bot_id, to_channel_name,
                             to_channel_type_id)
 from bot.image.analyze_image import Analyze_Image
 from bot.services.counter_service import CounterService
@@ -79,7 +79,7 @@ class Submit_Collect:
     async def __get_member_name(self, member_id):
         """Get display name for member by ID."""
         try:
-            guild = await get_or_fetch_guild(self.bot, SERVER_ID)
+            guild = await get_or_fetch_server(self.bot, app_settings.server_id)
             member = await get_or_fetch_member(guild, member_id)
             return member.display_name if member else ""
         except Exception as e:
@@ -327,7 +327,7 @@ class Submit_Collect:
     async def __get_or_fetch_channel(self, channel_id: int) -> discord.abc.GuildChannel | discord.Thread | None:
         """Get or fetch Discord channel by ID."""
         try:
-            guild = await get_or_fetch_guild(self.bot, SERVER_ID)
+            guild = await get_or_fetch_server(self.bot, app_settings.server_id)
             return await get_or_fetch_channel(guild, channel_id)
         except Exception as e:
             print(e)
@@ -335,7 +335,7 @@ class Submit_Collect:
     
     async def __log_formation(self, units: list, img_bytes, boss_name: str, counter: int) -> discord.Message:
         """Log formation data to spam channel for debugging. Returns the sent message."""
-        spam_chan = await self.__get_or_fetch_channel(SPAM_CHANNEL_ID)
+        spam_chan = await self.__get_or_fetch_channel(app_settings.thread_id)
         files = []
         if img_bytes:
             buffer = io.BytesIO(img_bytes)

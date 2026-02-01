@@ -1,8 +1,7 @@
 import discord
 
-from bot.core.constants import (AMARYLLIS_ID, SERVER_ID, SPAM_CHANNEL_ID,
-                                WAITER_ROLE_IDS)
-from bot.core.utils import (get_or_fetch_channel, get_or_fetch_guild,
+from bot.core.config import app_settings
+from bot.core.utils import (get_or_fetch_channel, get_or_fetch_server,
                             to_channel_name)
 from bot.submission.google_sheets import clear_image_str
 from bot.ui.embeds import (download_embed_images, get_embed_image_urls,
@@ -47,7 +46,7 @@ class Dropdown(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         """Handle dropdown selection."""
-        ephemeral = False if interaction.user.id == AMARYLLIS_ID else True
+        ephemeral = False if interaction.user.id == app_settings.amaryllis_id else True
         await self.callback_func(interaction, self.values[0], ephemeral)
 
 class DropdownView(discord.ui.View):
@@ -81,13 +80,13 @@ class ReportConfirmationView(discord.ui.View):
     
     """async def interaction_check(self, interaction: discord.Interaction) -> bool:
         "Check if user has permission to interact with this view."
-        if interaction.guild is None or interaction.guild.id != SERVER_ID:
+        if interaction.guild is None or interaction.guild.id != app_settings.server_id:
             return False
-        if interaction.user.id == AMARYLLIS_ID:
+        if interaction.user.id == app_settings.amaryllis_id:
             return True
         if interaction.user.guild_permissions.administrator:
             return True
-        return any(role.id in WAITER_ROLE_IDS for role in interaction.user.roles)
+        return any(role.id in app_settings.waiter_role_ids for role in interaction.user.roles)
         """
     
     @discord.ui.button(label="Continue", style=discord.ButtonStyle.green)
@@ -131,13 +130,13 @@ class ReportFormationView(discord.ui.View):
     """
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         "Check if user has permission to interact with this view."
-        if interaction.guild is None or interaction.guild.id != SERVER_ID:
+        if interaction.guild is None or interaction.guild.id != app_settings.server_id:
             return False
-        if interaction.user.id == AMARYLLIS_ID:
+        if interaction.user.id == app_settings.amaryllis_id:
             return True
         if interaction.user.guild_permissions.administrator:
             return True
-        return any(role.id in WAITER_ROLE_IDS for role in interaction.user.roles)
+        return any(role.id in app_settings.waiter_role_ids for role in interaction.user.roles)
     """
     
     @discord.ui.button(
@@ -165,11 +164,11 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
     bot = interaction.client
     
     try:
-        guild = await get_or_fetch_guild(bot, SERVER_ID)
-        spam_channel = await get_or_fetch_channel(guild, SPAM_CHANNEL_ID)
+        guild = await get_or_fetch_server(bot, app_settings.server_id)
+        spam_channel = await get_or_fetch_channel(guild, app_settings.thread_id)
         
         report_text = (
-            f"<@{AMARYLLIS_ID}>"
+            f"<@{app_settings.amaryllis_id}>"
             f"**Formation Misidentification Report**\n"
             f"**Reported by:** {interaction.user.mention}\n"
             f"**Submission Message:** {message.jump_url}\n"
@@ -182,7 +181,7 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
                     submission_id = embed.footer.text.split('ID:')[1].split('|')[0].strip()
                     report_text += f"**Submission ID:** {submission_id}\n"
 
-        msg = await spam_channel.send(f"<@{AMARYLLIS_ID}>")
+        msg = await spam_channel.send(f"<@{app_settings.amaryllis_id}>")
         await msg.edit(content=report_text)
         
         try:
@@ -228,7 +227,7 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
         ping_text = ""
         if submission_id:
             ping_text += f"submission #{submission_id} "
-        ping_text += f"<@{AMARYLLIS_ID}>"
+        ping_text += f"<@{app_settings.amaryllis_id}>"
             
         await interaction.followup.send(
             "An error occurred while reporting " + ping_text,

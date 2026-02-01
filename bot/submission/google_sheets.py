@@ -5,14 +5,14 @@ import gspread.exceptions
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
-from bot.core.constants import GSHEETS_INFO, SPREADSHEET_IDS
+from bot.core.config import db_settings
 from bot.core.utils import sanitize_user_input
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 def _get_creds_from_env():
     """Get Google Sheets credentials from environment."""
-    return Credentials.from_service_account_info(GSHEETS_INFO, scopes=SCOPES)
+    return Credentials.from_service_account_info(db_settings.google_sheets_info, scopes=SCOPES)
 
 agcm = AsyncioGspreadClientManager(_get_creds_from_env)
 
@@ -60,7 +60,7 @@ async def add_row(
     """Add a new row to the Google Sheet for the specified boss."""
     # print(f"Adding row for num_id {num_id} in {boss_name}")
     try:
-        sheet_id = SPREADSHEET_IDS["Dream Realm"]
+        sheet_id = db_settings.spreadsheet_ids["Dream Realm"]
         gc = await agcm.authorize()
         sh = await gc.open_by_key(sheet_id)
         ws = await get_or_create_worksheet(sh, boss_name)
@@ -117,7 +117,7 @@ async def clear_image_str(num_id: int, boss_name: str):
     """Clear the image_str and units_str columns for rows matching the given num_id."""
     # print(f"Clearing image_str and units_str for num_id {num_id} in {boss_name}")
     try:
-        sheet_id = SPREADSHEET_IDS[boss_name]
+        sheet_id = db_settings.spreadsheet_ids[boss_name]
         gc = await agcm.authorize()
         sh = await gc.open_by_key(sheet_id)
         ws = await get_or_create_worksheet(sh, "Roberto")

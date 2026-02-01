@@ -1,6 +1,6 @@
 from enum import Enum
 
-from bot.core.constants import ARTIFACTS, UNITS
+from bot.core.config import data_settings
 
 
 class Exit_Status(Enum):
@@ -23,8 +23,8 @@ class Tile(Enum):
     
     @classmethod
     def get_name_type(cls, name: str):
-        if name in ARTIFACTS: return cls.ARTIFACT
-        if name in UNITS: return cls.UNIT
+        if name in data_settings.artifacts: return cls.ARTIFACT
+        if name in data_settings.units: return cls.UNIT
         return cls.OTHER
     
     def convert_idx(self, idx: int) -> int:

@@ -3,29 +3,8 @@
     "waiter_role_ids": [1366553665816625253, 1366553846234746971, 1332135029618380820],
     "chef_role_id": 1332134942787764284,
     "stage_role_ids": [1458653124586635325],
-    "dahlia_id": 503292757494857739,
+    "amaryllis_id": 503292757494857739,
     "burger_king_id": 1332109296988717256,
-    "spreadsheet_ids": {
-        "Dream Realm": "1xMjASt_8fgavaGxbLk33OD_D247xcPAR0G7vsF1tBuI",
-        "Test": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "King Croaker S5": "1KEmUP9p4e7_umM9LvKN4UiYSnzruyi3X5wz1LcQmZz0",
-        "Necrodrakon S5": "1rZm9JuboTv4dTTxow1NTMnXVYliBT1yVU5JYBVd_t4A",
-        "Thalassa S5": "1-r5FpciGpxfgvcAPcQKX_tiOwHdwnfKXdmOMHvaItG4",
-        "Nocturne Judicator S5": "1QDNq6Bxy1I2AtcEisGEMEcN9lHuVh24SiyJx7IGzLZA",
-        "Sigmund S5": "1MWExWs1WLZkVykw-YjZdgaj2W724QYZoDBZ6ZFNYB3s",
-        "Mirage Frostpike S5": "14sz_r_29afJ7p08SAIN_24Zcm6yqRFfd5EOk0zDeyvU",
-        "Magmazard S5": "1ZCj0ygkDoyDSxVyyy-YKtnJZkzdn-H2wa81LV8qNPk0",
-        "Blightshroom S5": "1FkU4MNhYRjhg7dkOmUvrROIgWY3tyJeu-tzmQYoNqY8",
-        "Doomscourge S5": "1PUfT4Jo0zSHa5n94S9-UH7eVNLyhVrmACZuW5T3FeNE",
-        "Charge": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "Clash": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "Conquer": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "Age of Calamity": "1ulUZgKZ0gDOJZIclnfpD4-2E3ZHmaQAghUKPLCLLB14",
-        "Immortal (Graveborns)": "1u1o59HojYqL_Z_Aanqg25zzXCWRuYfcnZ-OfF3r6mTI",
-        "Dauntless (Maulers)": "19AvvisfhT2nugeT14E3vOt3ktMP_0YMAd2vz8vNEZrg",
-        "Sylvan (Wilders)": "138fW9g6ZCdBYdIkq1NV58KVR7VyoEXyVrWPR92OyCIU",
-        "Aurora (Lightbearers)": "1t4iXhXnRhCtR-k2WX125CBHGGY46fZj38Vk2WWigGV0"
-    },
     "ravaged_realm": [
         "Immortal (Graveborns)",
         "Dauntless (Maulers)",
@@ -37,20 +16,17 @@
         "Phantimal",
         "Age of Calamity"
     ],
-    "dream_realm": [
-        "King Croaker S5",
-        "Necrodrakon S5",
-        "Thalassa S5",
-        "Nocturne Judicator S5",
-        "Sigmund S5",
-        "Mirage Frostpike S5",
-        "Magmazard S5",
-        "Blightshroom S5"
+    "dream_realm_bosses": [
+        "Sarethiel",
+        "Gloommaw",
+        "Doomscourge",
+        "Blightshroom",
+        "Nocturne Judicator",
+        "Magmazard",
+        "Necrodrakon",
+        "King Croaker"
     ],
     "primal_lords": [
-        "Cinderwings S5",
-        "Gloommaw S5",
-        "Doomscourge S5",
         "Lady Starfallen",
         "Sound Thresher",
         "Midnight Harvester"

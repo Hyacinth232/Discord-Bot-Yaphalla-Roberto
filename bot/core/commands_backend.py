@@ -1,4 +1,4 @@
-from bot.core.constants import ARENA_DICT, ARTIFACTS, FILLS, LINES, MAPS, UNITS
+from bot.core.config import data_settings
 from bot.core.enum_classes import Tile
 from bot.core.utils import get_emoji, split_input, translate_name
 from bot.database.users import Users
@@ -15,7 +15,7 @@ def validate_arena(arena: str) -> str:
     if not arena:
         return None
     
-    if arena in MAPS:
+    if arena in data_settings.maps:
         return arena
     
     return None
@@ -69,7 +69,7 @@ class Commands_Backend:
             # Character already exists in formation
             return None
         """
-        if name not in UNITS and name not in ARTIFACTS:
+        if name not in data_settings.units and name not in data_settings.artifacts:
             return None
         
         tile_type = Tile.get_idx_type(idx)
@@ -161,7 +161,7 @@ class Commands_Backend:
     def name_to_emoji(self, name: str) -> str | None:
         """Convert unit/artifact name to Discord emoji string."""
         name = translate_name(name)
-        if name in ARTIFACTS or name in UNITS:
+        if name in data_settings.artifacts or name in data_settings.units:
             return get_emoji(name)
         return None
     
@@ -178,7 +178,7 @@ class Commands_Backend:
     def set_base_hex(self, user_id: int, idx: int, hex_name: str) -> str | None:
         """Set base hex fill/outline and return updated image."""
         self.initialize_user(user_id)
-        if (idx % 2 == 0 and hex_name in FILLS) or (idx % 2 == 1 and hex_name in LINES):
+        if (idx % 2 == 0 and hex_name in data_settings.fills) or (idx % 2 == 1 and hex_name in data_settings.lines):
             self.users.update_base_hex(user_id, idx, hex_name)
             return self.show_image(user_id)
         return None
@@ -205,7 +205,7 @@ class Commands_Backend:
     def set_map(self, user_id: int, arena: str) -> tuple[str, str]:
         """Set formation map and return updated image."""
         self.initialize_user(user_id)
-        arena = translate_name(arena, ARENA_DICT)
+        arena = translate_name(arena, data_settings.arena_dict)
         arena = validate_arena(arena)
         
         if arena:

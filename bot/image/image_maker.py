@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from bot.core.constants import FONT_PATH, HEX_CATEGORIES, MAPS
+from bot.core.config import data_settings, path_settings
 from bot.image.hex import Hex
 from bot.image.image_loader import Image_Loader
 
@@ -16,9 +16,9 @@ class Image_Maker:
         self.loader = Image_Loader()
         self.user_id = user_id
         self.arena = arena
-        if self.arena not in MAPS:
+        if self.arena not in data_settings.maps:
             self.arena = "Arena I"
-        self.tiles = sorted(MAPS[self.arena]['Tiles'], key=lambda x: (x[0] - x[1], x[0], x[1]), reverse=True)
+        self.tiles = sorted(data_settings.maps[self.arena]['Tiles'], key=lambda x: (x[0] - x[1], x[0], x[1]), reverse=True)
             
         self.is_private = is_private
         self.show_outline = True
@@ -31,8 +31,8 @@ class Image_Maker:
         self.arti_fill = base_hexes[2]
         self.arti_line = base_hexes[3]
 
-        self.width =  MAPS[self.arena]['Width']
-        self.height = MAPS[self.arena]['Height']
+        self.width =  data_settings.maps[self.arena]['Width']
+        self.height = data_settings.maps[self.arena]['Height']
         
         self.extra_height = 0
         if self.show_title:
@@ -48,7 +48,7 @@ class Image_Maker:
     def __enter__(self):
         """Initialize pygame and create surface."""
         pygame.init()
-        self.font = pygame.font.Font(str(FONT_PATH), FONT_SIZE)
+        self.font = pygame.font.Font(str(path_settings.font_path), FONT_SIZE)
         self.surface = pygame.Surface((self.width, self.height + self.test_setting), pygame.SRCALPHA)
         self.surface.fill((0, 0, 0, 0))
         return self
@@ -120,7 +120,7 @@ class Image_Maker:
             x, y = Hex.hex_to_corner_pixel(q, r, self.height)
             if idx in units:
                 self.__draw_occupied_tile(x, y, units[idx])
-                if units[idx] in HEX_CATEGORIES['Units']['Mauler']:
+                if units[idx] in data_settings.hex_categories['Units']['Mauler']:
                     self.mauler_count += 1
                 continue
             
