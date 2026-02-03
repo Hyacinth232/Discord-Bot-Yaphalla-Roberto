@@ -104,12 +104,15 @@ async def add_row(
             units_str,
             image_str]
         
-        await ws.append_row(
-            row,
-            value_input_option="USER_ENTERED",
-            table_range="A2",
-            insert_data_option="INSERT_ROWS"
-        )
+        for sheet_name in [boss_name, "Roberto"]:
+            ws = await get_or_create_worksheet(sh, sheet_name)
+        
+            await ws.append_row(
+                row,
+                value_input_option="USER_ENTERED",
+                table_range="A2",
+                insert_data_option="INSERT_ROWS"
+            )
 
     except Exception as e:
         amaryllis = await bot.fetch_user(app_settings.amaryllis_id)
