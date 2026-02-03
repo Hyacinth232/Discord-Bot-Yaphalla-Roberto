@@ -154,6 +154,7 @@ class Submit_Collect:
             
         if not formations:
             await add_row(
+                self.bot,
                 self.counter,
                 to_channel_name(self.channel_id),
                 self.author_name,
@@ -168,8 +169,9 @@ class Submit_Collect:
         total_image_count = len(formations)
         
         for i, (units, img_bytes) in enumerate(formations):
-            image_url = image_urls[-(total_image_count - i)] if image_urls else ""
+            image_url = image_urls[-(total_image_count - i)] if image_urls else None
             await add_row(
+                self.bot,
                 self.counter,
                 to_channel_name(self.channel_id),
                 self.author_name,
@@ -180,7 +182,8 @@ class Submit_Collect:
                 self.damage,
                 self.notes,
                 units,
-                image_url)
+                image_url=image_url,
+                image_bytes=img_bytes)
         
     async def __get_text(self, channel_type: ChannelType, new_url: str=None) -> str:
         """Generate formatted text for submission message."""

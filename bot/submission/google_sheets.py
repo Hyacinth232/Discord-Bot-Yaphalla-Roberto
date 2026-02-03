@@ -1,11 +1,12 @@
 import json
 import os
 
+import discord
 import gspread.exceptions
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
-from bot.core.config import db_settings
+from bot.core.config import app_settings, db_settings
 from bot.core.utils import sanitize_user_input
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -45,6 +46,7 @@ async def get_or_create_worksheet(spreadsheet: gspread.Spreadsheet, worksheet_na
         return worksheet
 
 async def add_row(
+    bot: discord.Client,
     num_id: int,
     boss_name: str,
     author_name: str,
@@ -60,7 +62,7 @@ async def add_row(
     """Add a new row to the Google Sheet for the specified boss."""
     # print(f"Adding row for num_id {num_id} in {boss_name}")
     try:
-        sheet_id = db_settings.spreadsheet_ids["Dream Realm"]
+        sheet_id = app_settings.spreadsheet_id
         gc = await agcm.authorize()
         sh = await gc.open_by_key(sheet_id)
         ws = await get_or_create_worksheet(sh, boss_name)
@@ -110,6 +112,8 @@ async def add_row(
         )
 
     except Exception as e:
+        amaryllis = await bot.fetch_user(app_settings.amaryllis_id)
+        await amaryllis.send("Error adding row to spreadsheet: {}".format(e))
         print(e)
 
 

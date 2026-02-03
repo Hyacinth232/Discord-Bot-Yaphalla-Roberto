@@ -87,6 +87,11 @@ class AppSettings(BaseSettings):
         description="Roberto bot user ID"
     )
     
+    spreadsheet_id: str | None = Field(
+        default=None,
+        description="Default Google Sheets spreadsheet ID"
+    )
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
