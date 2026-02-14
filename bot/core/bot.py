@@ -193,9 +193,31 @@ async def benchmark_pls(interaction: discord.Interaction):
         allowed_mentions=discord.AllowedMentions(roles=True)
     )
     
+def is_waiter_ctx(ctx: commands.Context) -> bool:
+    """Check if user has waiter role for text commands."""
+    if ctx.guild is None or ctx.guild.id != app_settings.server_id:
+        return False
+    if ctx.author.guild_permissions.administrator:
+        return True
+    if ctx.author.id == app_settings.amaryllis_id:
+        return True
+    return any(role.id in app_settings.waiter_role_ids for role in ctx.author.roles)
+
+def is_stage_role_ctx(ctx: commands.Context) -> bool:
+    """Check if user has stage role for text commands."""
+    if ctx.guild is None or ctx.guild.id != app_settings.server_id:
+        return False
+    if ctx.author.guild_permissions.administrator:
+        return True
+    if ctx.author.id == app_settings.amaryllis_id:
+        return True
+    return any(role.id in app_settings.stage_role_ids for role in ctx.author.roles)
+
 @bot.command(name='souschef')
-@discord.app_commands.check(is_waiter)
 async def souschef(ctx: commands.Context):
+    if not is_waiter_ctx(ctx):
+        return
+    
     channel = ctx.channel
     if channel.id not in app_settings.public_channel_names_to_ids.values() and channel.id not in [1363693988506243253, 1369228828412612670]: return
     
@@ -556,13 +578,15 @@ async def submit_formation(ctx: commands.Context):
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.DREAM_REALM)
     
 @bot.command(name="subn")
-@discord.app_commands.check(is_stage_role)
 async def submit_formation_normal(ctx: commands.Context):
+    if not is_stage_role_ctx(ctx):
+        return
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.NORMAL)
     
 @bot.command(name="subp")
-@discord.app_commands.check(is_stage_role)
 async def submit_formation_phantimal(ctx: commands.Context):
+    if not is_stage_role_ctx(ctx):
+        return
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.PHANTIMAL)
     
 @bot.command(name="collect")
@@ -582,7 +606,7 @@ async def toggle_manage_channels(ctx: commands.Context):
     if ctx.author.id != app_settings.amaryllis_id: return
     
     try:
-        mod_role = ctx.guild.get_role(1348155560780103701)
+        mod_role = guild.get_role(1348155560780103701)
         if mod_role is None:
             await owner.send("Role not found.")
             return
