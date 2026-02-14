@@ -57,8 +57,9 @@ class Submit_Collect:
             self.attach_msg: discord.Message = self.orig_msg.message_snapshots[0] if self.is_forwarded else self.orig_msg
             self.attachments = self.attach_msg.attachments
             
+        # Allow both images and videos for forwarding, but only images will be processed for formations
         self.attachments = [attachment for attachment in self.attachments 
-                            if attachment.content_type and 'image' in attachment.content_type]
+                            if attachment.content_type and ('image' in attachment.content_type or 'video' in attachment.content_type)]
         
     def fill_form(self, title: str, resonance: str, ascension: str, credit_name: str, damage: str, notes: str):
         """Fill form data for spreadsheet submission."""
@@ -251,7 +252,7 @@ class Submit_Collect:
         """Forward formation submission to appropriate channel."""
         files = []
         
-        # If there are any images to forward
+        # Forward all attachments (images and videos)
         if self.attachments:
             for i, attachment in enumerate(self.attachments):
                 ext = Path(attachment.filename).suffix
@@ -275,6 +276,7 @@ class Submit_Collect:
         footer = "ID: {} | Submitted by: {}".format(self.counter, self.forwarder_name)
         if files:
             embeds = make_embeds(text, footer, files[:10], self.logged_message_links)
+            # All files are attached, but only images are embedded (videos show as separate attachments)
             if formations:
                 sent_msg = await channel.send(embeds=embeds, files=files[:10], view=report_view)
             else:

@@ -579,14 +579,14 @@ async def submit_formation(ctx: commands.Context):
     
 @bot.command(name="subn")
 async def submit_formation_normal(ctx: commands.Context):
-    if not is_stage_role_ctx(ctx):
-        return
+    #if not is_stage_role_ctx(ctx):
+    #    return
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.NORMAL)
     
 @bot.command(name="subp")
 async def submit_formation_phantimal(ctx: commands.Context):
-    if not is_stage_role_ctx(ctx):
-        return
+    #if not is_stage_role_ctx(ctx):
+    #    return
     await commands_frontend.submit_wrapper(ctx, boss_type=BossType.PHANTIMAL)
     
 @bot.command(name="collect")

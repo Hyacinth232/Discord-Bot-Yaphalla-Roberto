@@ -201,6 +201,7 @@ async def _process_report(interaction: discord.Interaction, message: discord.Mes
         try:
             channel = message.channel
             embeds = make_embeds(text, footer, filtered_files)
+            # All files are attached, but only images are embedded (videos show as separate attachments)
             try:
                 await message.edit(embeds=embeds, attachments=filtered_files, view=None)
             except discord.errors.HTTPException:

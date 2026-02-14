@@ -4,29 +4,59 @@ import aiohttp
 import discord
 
 
+def _is_video_file(filename: str) -> bool:
+    """Check if a file is a video based on its extension."""
+    video_extensions = {'.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.m4v'}
+    if not filename:
+        return False
+    return any(filename.lower().endswith(ext) for ext in video_extensions)
+
 def make_embeds(text: str, footer: str, files: list[discord.File] = None, logged_message_links: list[str] = None) -> list[discord.Embed]:
-    """Create Discord embeds for submission message."""
+    """
+    Create Discord embeds for submission message.
+    Only images are embedded; videos will be attached separately.
+    
+    Args:
+        text: Embed description text
+        footer: Footer text
+        files: List of files (images will be embedded, videos will be attached separately)
+        logged_message_links: Optional list of troubleshooting links
+        
+    Returns:
+        List of embeds with images embedded (videos are not embedded)
+    """
     if logged_message_links:
         text += "\n-# Troubleshooting: " + " | ".join([f"[Link {i+1}]({link})" for i, link in enumerate(logged_message_links)])
+    
+    # Separate images from videos
+    image_files = []
+    
+    if files:
+        for file in files:
+            # Only embed non-video files (images)
+            if not _is_video_file(file.filename):
+                image_files.append(file)
     
     main_embed = discord.Embed(
         url="https://www.yaphalla.com",
         description=text,
         colour=0xa996ff,
     )
-    if files:
-        main_embed.set_image(url="attachment://{}".format(files[0].filename))
+    
+    # Only embed the first image if available
+    if image_files:
+        main_embed.set_image(url="attachment://{}".format(image_files[0].filename))
     
     main_embed.set_footer(text=footer)
     embeds = [main_embed]
     
-    if not files or len(files) == 1:
-        return embeds
+    # Add additional images as separate embeds
+    if len(image_files) > 1:
+        for file in image_files[1:]:
+            embed = discord.Embed(url="https://www.yaphalla.com", colour=0xa996ff)
+            embed.set_image(url="attachment://{}".format(file.filename))
+            embeds.append(embed)
     
-    for file in files[1:]:
-        embed = discord.Embed(url="https://www.yaphalla.com", colour=0xa996ff)
-        embed.set_image(url="attachment://{}".format(file.filename))
-        embeds.append(embed)
     return embeds
 
 def get_embed_image_urls(embeds: list[discord.Embed]) -> list[dict[str, str]]:
