@@ -630,8 +630,8 @@ class Commands_Frontend:
             "(day {} of {})".format(elapsed_days % count + 1, count)
         )
         
-        await amaryllis.send("Rotating channels: today={}, tomorrow={} ".format(today_chan_name, tomorrow_chan_name) +
-            "(day {} of {})".format(elapsed_days % count + 1, count))
+        # await amaryllis.send("Rotating channels: today={}, tomorrow={} ".format(today_chan_name, tomorrow_chan_name) +
+        #     "(day {} of {})".format(elapsed_days % count + 1, count))
         
         for chan_name in app_settings.dream_realm_bosses:
             public_chan_id = app_settings.public_channel_names_to_ids.get(chan_name)
@@ -664,12 +664,12 @@ class Commands_Frontend:
                     public_overwrite_new.view_channel = True
                     private_overwrite_new.view_channel = True
                     logger.info("Setting view_channel to True for {}".format(chan_name))
-                    await amaryllis.send("Setting view_channel to True for {}".format(chan_name))
+                    #await amaryllis.send("Setting view_channel to True for {}".format(chan_name))
                 else:
                     public_overwrite_new.view_channel = False
                     private_overwrite_new.view_channel = False
                     logger.info("Setting view_channel to False for {}".format(chan_name))
-                    await amaryllis.send("Setting view_channel to False for {}".format(chan_name))
+                    #await amaryllis.send("Setting view_channel to False for {}".format(chan_name))
                 
                 private_overwrite_new.send_messages = False
                     
