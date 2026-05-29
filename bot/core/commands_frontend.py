@@ -603,6 +603,8 @@ class Commands_Frontend:
     async def rotate_channels(self, bot: discord.Client):
         # s4 datetime(2025, 5, 23, tzinfo=timezone.utc)
         # s5 datetime(2025, 9, 26, tzinfo=timezone.utc)
+        # s6 datetime(2026, 1, 30, tzinfo=timezone.utc)
+        # s7 datetime(2026, 5, 29, tzinfo=timezone.utc)
         """Periodic task to rotate channel permissions based on elapsed days."""
         server = await get_or_fetch_server(bot, app_settings.server_id)
         if server is None:

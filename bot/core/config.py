@@ -78,7 +78,7 @@ class AppSettings(BaseSettings):
     misc: list[str] = Field(..., description="Miscellaneous categories")
     
     start_date: datetime = Field(
-        default_factory=lambda: datetime(2026, 1, 30, tzinfo=timezone.utc),
+        default_factory=lambda: datetime(2026, 5, 29, tzinfo=timezone.utc),
         description="Start date for rotation calculation"
     )
     
