@@ -122,7 +122,8 @@
             "Zanie",
             "Turret",
             "Evie",
-            "Silven"
+            "Silven",
+            "Gwyneth"
         ],
         "Mauler": [
             "Nazrik",
@@ -191,7 +192,8 @@
             "Shemira",
             "Daimon",
             "Shadewing",
-            "Zorya"
+            "Zorya",
+            "Nerion"
         ],
         "Celestial": [
             "Alna",
@@ -205,7 +207,8 @@
             "Scarlita",
             "Talene",
             "Baelran",
-            "Aurora"
+            "Aurora",
+            "Sylphira"
         ],
         "Hypogean": [
             "Berial",
@@ -220,13 +223,16 @@
             "Mehira",
             "Contess",
             "Gunnar"
+
         ],
         "Dimensional": [
             "Natsu",
             "Lucy",
             "Pandora",
             "Laios",
-            "Marcille"
+            "Marcille",
+            "Frieren",
+            "Himmel"
         ],
         "Phantimal": [
             "Illucia",
