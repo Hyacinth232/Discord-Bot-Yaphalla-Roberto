@@ -98,7 +98,7 @@ class SpreadsheetModal(BaseSubmissionModal, title="Submit Formation (by Take)"):
             label="Credits",
             placeholder="(e.g. Frosty)",
             required=False,
-            max_length=30
+            max_length=100
         )
         
         self.damage_field = discord.ui.TextInput(
@@ -106,7 +106,7 @@ class SpreadsheetModal(BaseSubmissionModal, title="Submit Formation (by Take)"):
             placeholder="(e.g. 37.1B or 17682M)",
             required=True,
             min_length=2,
-            max_length=20
+            max_length=100
         )
         
         self.resonance_field = discord.ui.TextInput(
