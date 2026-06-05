@@ -462,7 +462,7 @@ class Commands_Frontend:
         formations = await submitter.ctx_submit_message_wrapper()
         await submitter.send_images(interaction, formations)
         report_view = ReportFormationView()
-        await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
+        await submitter.forward_formation(ChannelType.PRIVATE, report_view=report_view)
 
     async def context_basic_modal_wrapper(self, interaction: discord.Interaction, message: discord.Message):
         if isinstance(message.channel, discord.DMChannel) or is_afk_channel(message.channel.id):
@@ -580,7 +580,7 @@ class Commands_Frontend:
         
         formations = await submitter.ctx_submit_message_wrapper()
         report_view = ReportFormationView()
-        await submitter.forward_formation(ChannelType.PRIVATE, formations, report_view=report_view)
+        await submitter.forward_formation(ChannelType.PRIVATE, report_view=report_view)
         
     async def add_permissions(self, bot: discord.Client):
         

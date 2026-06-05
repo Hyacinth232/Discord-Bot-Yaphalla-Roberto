@@ -58,7 +58,7 @@ class BaseSubmissionModal(discord.ui.Modal):
         
         await submitter.send_images(interaction, formations)
         
-        msg =await submitter.forward_formation(ChannelType.PRIVATE, formations, url=url_or_none, report_view=report_view)
+        msg =await submitter.forward_formation(ChannelType.PRIVATE, url=url_or_none, report_view=report_view)
         
         image_urls = get_embed_image_urls(msg.embeds)
         formation_urls = [url_dict['proxy_url'] for url_dict in image_urls if url_dict['is_formation']]
