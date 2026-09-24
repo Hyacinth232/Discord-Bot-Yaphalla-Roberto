@@ -18,14 +18,14 @@
         "Age of Calamity"
     ],
     "dream_realm_bosses":  [
-        "Snow Stomper",
-        "Midnight Harvester",
         "King Croaker",
         "Novik",
         "Mirage Frostspike",
         "Marshtoad",
         "Doomscourge",
-        "Talking Root"
+        "Talking Root",
+        "Snow Stomper",
+        "Midnight Harvester"
     ],
     "primal_lords": [
         "Gravebloom Maiden",
