@@ -17,20 +17,20 @@
         "Phantimal",
         "Age of Calamity"
     ],
-    "dream_realm_bosses": [
-        "King Croaker",
+    "dream_realm_bosses":  [
+        "Snow Stomper",
         "Midnight Harvester",
-        "Illucia",
-        "Sarethiel",
-        "Lady Starfallen",
+        "King Croaker",
+        "Novik",
+        "Mirage Frostspike",
+        "Marshtoad",
         "Doomscourge",
-        "Gloommaw",
-        "Snow Stomper"
+        "Talking Root"
     ],
     "primal_lords": [
-        "Marshtoad",
-        "Doomward Phantom",
-        "Mirror Wraith"
+        "Gravebloom Maiden",
+        "Grave Alchemist",
+        "Soul Puppeteer",
     ],
     "titan_reaver": [
         "Charge",
