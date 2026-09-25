@@ -3,6 +3,7 @@ import os
 
 import discord
 import gspread.exceptions
+from datetime import datetime
 from google.oauth2.service_account import Credentials
 from gspread_asyncio import AsyncioGspreadClientManager
 
@@ -40,7 +41,8 @@ async def get_or_create_worksheet(spreadsheet: gspread.Spreadsheet, worksheet_na
             "Damage",
             "Notes",
             "Units",
-            "Image"
+            "Image",
+            "Date"
         ]
         await worksheet.append_row(headers, value_input_option="USER_ENTERED")
         return worksheet
@@ -102,7 +104,8 @@ async def add_row(
             sanitize_user_input(damage),
             sanitize_user_input(notes),
             units_str,
-            image_str]
+            image_str,
+            datetime.now()]
         
         for sheet_name in [boss_name, "Roberto"]:
             ws = await get_or_create_worksheet(sh, sheet_name)
