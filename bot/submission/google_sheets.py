@@ -105,7 +105,7 @@ async def add_row(
             sanitize_user_input(notes),
             units_str,
             image_str,
-            datetime.now()]
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
         
         for sheet_name in [boss_name, "Roberto"]:
             ws = await get_or_create_worksheet(sh, sheet_name)
