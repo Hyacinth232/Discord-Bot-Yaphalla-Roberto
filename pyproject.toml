@@ -1,0 +1,50 @@
+[project]
+name = "roberto"
+version = "2.0.0"
+description = "Yaphalla's Discord bot for team submissions, boss guides and channel rotation"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "discord.py>=2.7.1",
+    "google-auth>=2.62.0",
+    "gspread>=6.2.1",
+    "gspread-asyncio>=3.0.0",
+    "pillow>=12.3.0",
+    "pydantic>=2.14.1",
+    "pydantic-settings>=2.16.0",
+    "pymongo>=4.19.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.17.1",
+]
+
+[tool.uv]
+# An application, not a library: install dependencies only and run with `python -m bot`
+package = false
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["legacy"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "SIM",      # simplify
+    "ASYNC",    # async pitfalls
+    "LOG", "G", # logging
+    "RUF",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

@@ -1,0 +1,46 @@
+{
+    "server_id": 1332082220013322240,
+    "spreadsheet_id": "103Qf-XWq84mwbuF7j3C2MpTUyVmMZXEuAnRpXjoaJVY",
+    "souschef_extra_channel_ids": [
+        1363693988506243253,
+        1369228828412612670
+    ],
+    "roles": {
+        "waiter": [
+            1366553665816625253,
+            1366553846234746971,
+            1332135029618380820
+        ],
+        "stage": [
+            1458653124586635325
+        ],
+        "benchmark": 1332134991861383390,
+        "souschef": 1348163901149417553
+    },
+    "afk": {
+        "public": 1549415171238273074,
+        "normal": 1549415285314814115,
+        "phantimal": 1549415259679363143
+    },
+    "bosses": {
+        "Age of Calamity": { "public": 1447376215731339394, "private": 1447376245158445128 },
+        "Immortal (Graveborns)": { "public": 1541065473503010816, "private": 1541065725941125271 },
+        "Dauntless (Maulers)": { "public": 1541065545086926858, "private": 1541065827913043988 },
+        "Sylvan (Wilders)": { "public": 1541065600879828992, "private": 1541065915951620096 },
+        "Aurora (Lightbearers)": { "public": 1541065646656192583, "private": 1541065987472752720 },
+        "King Croaker": { "public": 1549412569020768347, "private": 1549412480479133818 },
+        "Novik": { "public": 1549412667125665852, "private": 1549412633600467075 },
+        "Mirage Frostspike": { "public": 1549412820389593148, "private": 1549412770506743859 },
+        "Marshtoad": { "public": 1549413576316428308, "private": 1549413641969995886 },
+        "Doomscourge": { "public": 1549413514211360899, "private": 1549412867995074691 },
+        "Talking Root": { "public": 1549413968790167632, "private": 1549413923273445558 },
+        "Snow Stomper": { "public": 1549414068950007878, "private": 1549414019151044649 },
+        "Midnight Harvester": { "public": 1549414212680294470, "private": 1549414139909116004 },
+        "Gravebloom Maiden": { "public": 1549081691719729182, "private": 1549081612891852893 },
+        "Grave Alchemist": { "public": 1549090984732659764, "private": 1549090939039912168 },
+        "Soul Puppeteer": { "public": 1549091203168084068, "private": 1549091123115462788 },
+        "Charge": { "public": 1462489976766857321, "private": 1462489944693145620 },
+        "Clash": { "public": 1462490105557291185, "private": 1462490075484127334 },
+        "Conquer": { "public": 1462490240697499750, "private": 1462490219461738659 }
+    }
+}
