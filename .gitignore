@@ -1,11 +1,20 @@
-.vscode
-.DS_STORE
-__pycache__
-503292757494857739.png
-1332876459592781884.png
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets and per-developer config
 .env
-.venv
+config/test.json
+google_account.json
+
+# Editors and OS
+.vscode/
+.DS_Store
+
+# Local scratch files
+scripts/
 WORKING_DOCUMENTATION.md
 ISSUES.md
-config/setup_test.json
-scripts
+/*.png

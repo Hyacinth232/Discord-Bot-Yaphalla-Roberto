@@ -1,0 +1,33 @@
+{
+    "amaryllis_id": 503292757494857739,
+    "season": 8,
+    "start_date": "2026-09-23T00:00:00Z",
+    "game_modes": {
+        "dream_realm": [
+            "King Croaker",
+            "Novik",
+            "Mirage Frostspike",
+            "Marshtoad",
+            "Doomscourge",
+            "Talking Root",
+            "Snow Stomper",
+            "Midnight Harvester"
+        ],
+        "primal_lords": [
+            "Gravebloom Maiden",
+            "Grave Alchemist",
+            "Soul Puppeteer"
+        ],
+        "ravaged_realm": [
+            "Immortal (Graveborns)",
+            "Dauntless (Maulers)",
+            "Sylvan (Wilders)",
+            "Aurora (Lightbearers)"
+        ],
+        "titan_reaver": [
+            "Charge",
+            "Clash",
+            "Conquer"
+        ]
+    }
+}
