@@ -9,17 +9,17 @@ dependencies = [
     "google-auth>=2.62.0",
     "gspread>=6.2.1",
     "gspread-asyncio>=3.0.0",
-    "pillow>=12.3.0",
-    "pydantic>=2.14.1",
-    "pydantic-settings>=2.16.0",
+    "pillow>=13.0.0",
+    "pydantic>=2.14.2",
+    "pydantic-settings>=2.16.2",
     "pymongo>=4.19.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
-    "ruff>=0.17.1",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
+    "ruff>=0.17.3",
 ]
 
 [tool.uv]
